@@ -8,9 +8,19 @@ public class IfNode extends StatementNode {
     public final BlockNode thenBlock;
     public final BlockNode elseBlock;
 
+    public IfNode(ExprNode cond, BlockNode thenBlock) {
+        this.condition = cond;
+        this.thenBlock = thenBlock;
+        this.elseBlock = null;
+    }
+
     public IfNode(ExprNode cond, BlockNode thenBlock, BlockNode elseBlock) {
         this.condition = cond;
         this.thenBlock = thenBlock;
         this.elseBlock = elseBlock;
+    }
+
+    public boolean hasElseBlock() {
+        return elseBlock != null;
     }
 }
