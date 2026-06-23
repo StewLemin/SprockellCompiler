@@ -21,7 +21,7 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         List<StatementNode> statements = new ArrayList<>();
 
         for(MyLangParser.StatementContext statementContext : ctx.statement()) {
-            statements.add(StatementNode) visit(statementContext);
+            statements.add((StatementNode) visit(statementContext));
         }
 
         return new ProgramNode(statements);
@@ -29,17 +29,18 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitDeclarationStatement(MyLangParser.DeclarationStatementContext ctx) {
-        return super.visitDeclarationStatement(ctx);
+        
+        return (StatementNode) visit(ctx.declaration());
     }
 
     @Override
     public ASTNode visitAssignmentStatement(MyLangParser.AssignmentStatementContext ctx) {
-        return super.visitAssignmentStatement(ctx);
+        return (StatementNode) visit(ctx.assignment());
     }
 
     @Override
     public ASTNode visitPrintStatement(MyLangParser.PrintStatementContext ctx) {
-        return super.visitPrintStatement(ctx);
+        return 
     }
 
     @Override
