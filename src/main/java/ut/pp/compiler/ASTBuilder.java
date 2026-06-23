@@ -1,11 +1,18 @@
 package ut.pp.compiler;
 
-import java.util.ArrayList;
-import java.util.List;
+
 import ut.pp.ast.ASTNode;
+import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
+import ut.pp.ast.expr.*;
+import ut.pp.ast.statement.*;
+import ut.pp.ast.type.*;
+import ut.pp.ast.variable.*;
 import ut.pp.parser.MyLangBaseVisitor;
 import ut.pp.parser.MyLangParser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
@@ -14,10 +21,10 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         List<StatementNode> statements = new ArrayList<>();
 
         for(MyLangParser.StatementContext statementContext : ctx.statement()) {
-            statements.add(StatementNode) visit(statementContext)
+            statements.add(StatementNode) visit(statementContext);
         }
 
-        return super.visitProgram(ctx);
+        return new ProgramNode(statements);
     }
 
     @Override
