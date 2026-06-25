@@ -6,7 +6,7 @@ public class TypeNode extends ASTNode {
     public final TypeKind kind;
     public final Integer arrayLength; // we define null as not an array
 
-    public TypeNode(TypeKind kind ) {
+    public TypeNode(TypeKind kind) {
         this.kind = kind;
         this.arrayLength = null;
     }

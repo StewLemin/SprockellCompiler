@@ -97,10 +97,24 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         return new ArrayNode(name, index);
     }
 
-    //TODO
     @Override
     public ASTNode visitType(MyLangParser.TypeContext ctx) {
-        return super.visitType(ctx);
+        String baseType = ctx.getChild(0).getText();
+
+        TypeKind kind;
+        if (baseType.equals("int")) {
+            kind = TypeKind.INT;
+        } else if (baseType.equals("bool")) {
+            kind = TypeKind.BOOL;
+        } else {
+            throw new IllegalArgumentException("Unknown type: " + baseType);
+        }
+
+        if(ctx.INT() != null) {
+            return new TypeNode(kind, Integer.parseInt(ctx.INT().getText()));
+        }
+
+        return new TypeNode(kind);
     }
 
 
