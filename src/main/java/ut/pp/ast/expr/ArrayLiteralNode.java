@@ -1,14 +1,12 @@
 package ut.pp.ast.expr;
 
 import ut.pp.ast.ExprNode;
-import ut.pp.ast.variable.ArrayNode;
+import java.util.List;
 
 public class ArrayLiteralNode extends ExprNode {
-    public final ExprNode index;
-    public final String arrayName;
+    public final List<ExprNode> elements;
 
-    public ArrayLiteralNode(ExprNode index, String name) {
-        this.index = index;
-        this.arrayName = name;
+    public ArrayLiteralNode(List<ExprNode> elements) {
+        this.elements = elements;
     }
 }

@@ -2,6 +2,7 @@ package ut.pp.compiler;
 
 
 import ut.pp.ast.ASTNode;
+import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
 import ut.pp.ast.expr.*;
@@ -39,122 +40,204 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitPrintStatement(MyLangParser.PrintStatementContext ctx) {
-        return
+        return (StatementNode) visit(ctx.print());
     }
 
     @Override
     public ASTNode visitIfStatement(MyLangParser.IfStatementContext ctx) {
-        return super.visitIfStatement(ctx);
+        return (StatementNode) visit(ctx.ifElse());
     }
 
     @Override
     public ASTNode visitWhileStatement(MyLangParser.WhileStatementContext ctx) {
-        return super.visitWhileStatement(ctx);
+        return (StatementNode) visit(ctx.while_());
     }
 
     @Override
     public ASTNode visitBlockStatement(MyLangParser.BlockStatementContext ctx) {
-        return super.visitBlockStatement(ctx);
+        return (StatementNode) visit(ctx.block());
     }
 
     @Override
     public ASTNode visitDeclaration(MyLangParser.DeclarationContext ctx) {
-        return super.visitDeclaration(ctx);
-    }
+        TypeNode type = (TypeNode) visit(ctx.type());
+        String name = ctx.ID().getText();
 
-    @Override
-    public ASTNode visitVar(MyLangParser.VarContext ctx) {
-        return super.visitVar(ctx);
+        if (ctx.expr() == null) {
+            return new DeclarationNode(type, name);
+        }
+
+        ExprNode initializer = (ExprNode) visit(ctx.expr());
+        return new DeclarationNode(type, name, initializer);
     }
 
     @Override
     public ASTNode visitAssignment(MyLangParser.AssignmentContext ctx) {
-        return super.visitAssignment(ctx);
-    }
+        VarNode target = (VarNode) visit(ctx.var());
+        ExprNode value = (ExprNode) visit(ctx.expr());
 
-    @Override
-    public ASTNode visitType(MyLangParser.TypeContext ctx) {
-        return super.visitType(ctx);
-    }
-
-    @Override
-    public ASTNode visitIfElse(MyLangParser.IfElseContext ctx) {
-        return super.visitIfElse(ctx);
-    }
-
-    @Override
-    public ASTNode visitWhile(MyLangParser.WhileContext ctx) {
-        return super.visitWhile(ctx);
-    }
-
-    @Override
-    public ASTNode visitBlock(MyLangParser.BlockContext ctx) {
-        return super.visitBlock(ctx);
+        return new AssignmentNode(target, value);
     }
 
     @Override
     public ASTNode visitPrint(MyLangParser.PrintContext ctx) {
-        return super.visitPrint(ctx);
+        ExprNode expression = (ExprNode) visit(ctx.expr());
+        return new PrintNode(expression);
     }
 
     @Override
-    public ASTNode visitMulExpr(MyLangParser.MulExprContext ctx) {
-        return super.visitMulExpr(ctx);
+    public ASTNode visitVar(MyLangParser.VarContext ctx) {
+        String name = ctx.ID().getText();
+
+        if(ctx.expr() == null) {
+            return  new VariableNode(name);
+        }
+
+        ExprNode index = (ExprNode) visit(ctx.expr());
+        return new ArrayNode(name, index);
     }
 
     @Override
-    public ASTNode visitAndExpr(MyLangParser.AndExprContext ctx) {
-        return super.visitAndExpr(ctx);
+    public ASTNode visitType(MyLangParser.TypeContext ctx) {
+        String baseType = ctx.getChild(0).getText();
+
+        TypeKind kind;
+        if (baseType.equals("int")) {
+            kind = TypeKind.INT;
+        } else if (baseType.equals("bool")) {
+            kind = TypeKind.BOOL;
+        } else {
+            throw new IllegalArgumentException("Unknown type: " + baseType);
+        }
+
+        if(ctx.INT() != null) {
+            return new TypeNode(kind, Integer.parseInt(ctx.INT().getText()));
+        }
+
+        return new TypeNode(kind);
+    }
+
+
+    @Override
+    public ASTNode visitIfElse(MyLangParser.IfElseContext ctx) {
+        ExprNode condition = (ExprNode) visit(ctx.expr());
+        BlockNode thenBlock = (BlockNode) visit(ctx.block(0));
+
+        if(ctx.block().size() == 1) {
+            return new IfNode(condition, thenBlock);
+        }
+
+        BlockNode elseBlock = (BlockNode) visit((ctx.block(1)));
+        return new IfNode(condition, thenBlock, elseBlock);
     }
 
     @Override
-    public ASTNode visitBoolExpr(MyLangParser.BoolExprContext ctx) {
-        return super.visitBoolExpr(ctx);
+    public ASTNode visitWhile(MyLangParser.WhileContext ctx) {
+        ExprNode condition = (ExprNode) visit(ctx.expr());
+        BlockNode body = (BlockNode) visit(ctx.block());
+
+        return new WhileNode(condition, body);
     }
 
     @Override
-    public ASTNode visitEqualityExpr(MyLangParser.EqualityExprContext ctx) {
-        return super.visitEqualityExpr(ctx);
-    }
+    public ASTNode visitBlock(MyLangParser.BlockContext ctx) {
+        List<StatementNode> statements = new ArrayList<>();
 
-    @Override
-    public ASTNode visitCompareExpr(MyLangParser.CompareExprContext ctx) {
-        return super.visitCompareExpr(ctx);
-    }
+        for(MyLangParser.StatementContext statementContext : ctx.statement()) {
+            statements.add((StatementNode) visit(statementContext));
+        }
 
-    @Override
-    public ASTNode visitArrayLiteralExpr(MyLangParser.ArrayLiteralExprContext ctx) {
-        return super.visitArrayLiteralExpr(ctx);
-    }
-
-    @Override
-    public ASTNode visitVarExpr(MyLangParser.VarExprContext ctx) {
-        return super.visitVarExpr(ctx);
-    }
-
-    @Override
-    public ASTNode visitNotExpr(MyLangParser.NotExprContext ctx) {
-        return super.visitNotExpr(ctx);
-    }
-
-    @Override
-    public ASTNode visitIntExpr(MyLangParser.IntExprContext ctx) {
-        return super.visitIntExpr(ctx);
-    }
-
-    @Override
-    public ASTNode visitParenExpr(MyLangParser.ParenExprContext ctx) {
-        return super.visitParenExpr(ctx);
+        return new BlockNode(statements);
     }
 
     @Override
     public ASTNode visitAddSubExpr(MyLangParser.AddSubExprContext ctx) {
-        return super.visitAddSubExpr(ctx);
+        ExprNode left = (ExprNode) visit(ctx.expr().get(0));
+        String operator = ctx.getChild(1).getText();
+        ExprNode right = (ExprNode) visit(ctx.expr().get(1));
+
+        return new DoubleExprNode(left, operator, right);
+    }
+
+    @Override
+    public ASTNode visitMulExpr(MyLangParser.MulExprContext ctx) {
+        ExprNode left = (ExprNode) visit(ctx.expr().get(0));
+        String operator = ctx.getChild(1).getText();
+        ExprNode right = (ExprNode) visit(ctx.expr().get(1));
+
+        return new DoubleExprNode(left, operator, right);
     }
 
     @Override
     public ASTNode visitOrExpr(MyLangParser.OrExprContext ctx) {
-        return super.visitOrExpr(ctx);
+        ExprNode left = (ExprNode) visit(ctx.expr().get(0));
+        String operator = ctx.getChild(1).getText();
+        ExprNode right = (ExprNode) visit(ctx.expr().get(1));
+
+        return new DoubleExprNode(left, operator, right);
+    }
+
+    @Override
+    public ASTNode visitAndExpr(MyLangParser.AndExprContext ctx) {
+        ExprNode left = (ExprNode) visit(ctx.expr().get(0));
+        String operator = ctx.getChild(1).getText();
+        ExprNode right = (ExprNode) visit(ctx.expr().get(1));
+
+        return new DoubleExprNode(left, operator, right);
+    }
+
+    @Override
+    public ASTNode visitEqualityExpr(MyLangParser.EqualityExprContext ctx) {
+        ExprNode left = (ExprNode) visit(ctx.expr().get(0));
+        String operator = ctx.getChild(1).getText();
+        ExprNode right = (ExprNode) visit(ctx.expr().get(1));
+
+        return new DoubleExprNode(left, operator, right);
+    }
+
+    @Override
+    public ASTNode visitCompareExpr(MyLangParser.CompareExprContext ctx) {
+        ExprNode left = (ExprNode) visit(ctx.expr().get(0));
+        String operator = ctx.getChild(1).getText();
+        ExprNode right = (ExprNode) visit(ctx.expr().get(1));
+
+        return new DoubleExprNode(left, operator, right);
+    }
+
+    @Override
+    public ASTNode visitArrayLiteralExpr(MyLangParser.ArrayLiteralExprContext ctx) {
+        List<ExprNode> elements = new ArrayList<>();
+
+        for (MyLangParser.ExprContext exprContext : ctx.expr()) {
+            elements.add((ExprNode) visit(exprContext));
+        }
+
+        return new ArrayLiteralNode(elements);
+    }
+
+    @Override
+    public ASTNode visitVarExpr(MyLangParser.VarExprContext ctx) {
+        return visit(ctx.var());
+    }
+
+    @Override
+    public ASTNode visitNotExpr(MyLangParser.NotExprContext ctx) {
+        return new SingleExprNode(ctx.getChild(0).getText(), (ExprNode) visit(ctx.expr()));
+    }
+
+    @Override
+    public ASTNode visitIntExpr(MyLangParser.IntExprContext ctx) {
+        return new IntNode(Integer.parseInt(ctx.INT().getText()));
+    }
+
+    @Override
+    public ASTNode visitBoolExpr(MyLangParser.BoolExprContext ctx) {
+        return new BoolNode(ctx.BOOL().getText().equals("TRUE"));
+    }
+
+    @Override
+    public ASTNode visitParenExpr(MyLangParser.ParenExprContext ctx) {
+        return visit(ctx.expr());
     }
 }
 
