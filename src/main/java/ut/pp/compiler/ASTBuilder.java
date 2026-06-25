@@ -237,7 +237,7 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitParenExpr(MyLangParser.ParenExprContext ctx) {
-        return super.visitParenExpr(ctx);
+        return visit(ctx.expr());
     }
 }
 
