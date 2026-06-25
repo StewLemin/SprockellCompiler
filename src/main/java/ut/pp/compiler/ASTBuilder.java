@@ -29,7 +29,6 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitDeclarationStatement(MyLangParser.DeclarationStatementContext ctx) {
-        
         return (StatementNode) visit(ctx.declaration());
     }
 
@@ -40,7 +39,7 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitPrintStatement(MyLangParser.PrintStatementContext ctx) {
-        return 
+        return
     }
 
     @Override
