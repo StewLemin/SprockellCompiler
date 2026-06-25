@@ -6,11 +6,12 @@ import ut.pp.ast.type.TypeNode;
 public class DeclarationNode extends StatementNode {
     public final TypeNode type;
     public final String identifier;
-    public ExprNode value = null;//to replace exprNode with something along the way
+    public final ExprNode value;
 
     public DeclarationNode(TypeNode type,String identifier){
         this.identifier = identifier;
         this.type = type;
+        this.value = null;
     }
 
     public DeclarationNode(TypeNode type, String identifier, ExprNode expression){

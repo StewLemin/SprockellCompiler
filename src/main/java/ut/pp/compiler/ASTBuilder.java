@@ -117,6 +117,7 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         return new IfNode(condition, thenBlock, elseBlock);
     }
 
+    //TODO
     @Override
     public ASTNode visitWhile(MyLangParser.WhileContext ctx) {
         return super.visitWhile(ctx);
@@ -133,61 +134,73 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         return new BlockNode(statements);
     }
 
+    //TODO
     @Override
     public ASTNode visitMulExpr(MyLangParser.MulExprContext ctx) {
         return super.visitMulExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitAndExpr(MyLangParser.AndExprContext ctx) {
         return super.visitAndExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitBoolExpr(MyLangParser.BoolExprContext ctx) {
         return super.visitBoolExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitEqualityExpr(MyLangParser.EqualityExprContext ctx) {
         return super.visitEqualityExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitCompareExpr(MyLangParser.CompareExprContext ctx) {
         return super.visitCompareExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitArrayLiteralExpr(MyLangParser.ArrayLiteralExprContext ctx) {
         return super.visitArrayLiteralExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitVarExpr(MyLangParser.VarExprContext ctx) {
         return super.visitVarExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitNotExpr(MyLangParser.NotExprContext ctx) {
         return super.visitNotExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitIntExpr(MyLangParser.IntExprContext ctx) {
         return super.visitIntExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitParenExpr(MyLangParser.ParenExprContext ctx) {
         return super.visitParenExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitAddSubExpr(MyLangParser.AddSubExprContext ctx) {
         return super.visitAddSubExpr(ctx);
     }
 
+    //TODO
     @Override
     public ASTNode visitOrExpr(MyLangParser.OrExprContext ctx) {
         return super.visitOrExpr(ctx);
