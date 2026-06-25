@@ -22,25 +22,14 @@ public class SymbolTable {
     }
 
     public void declare(String name,TypeNode type, boolean initialized) {
-        if (scopesList.get(scopesList.size() - 1).containsKey(name)){
-            Symbol variable = scopesList.get(scopesList.size() - 1).get(name);
-            if(!variable.isInitialized()){
-                variable.initialize();
-            }
-        }
-        else{
+        if (!isDeclaredInCurrScope(name)){
             Symbol variable = new Symbol(name,type,initialized);
             scopesList.get(scopesList.size() - 1).put(name,variable);
         }
     }
 
-    public boolean isDeclaredInCurrScope(String name, TypeNode type) {
-        for(int i = scopesList.size() - 1; i >= 0; i--){
-            if(scopesList.get(i).containsKey(name)){
-                return true;
-            }
-        }
-        return false;
+    public boolean isDeclaredInCurrScope(String name) {
+        return  scopesList.get(scopesList.size() - 1).containsKey(name);
     }
 
     public Symbol lookup(String name) {
@@ -53,6 +42,9 @@ public class SymbolTable {
     }
 
     public void markIntiliazed(String name) {
-       lookup(name).initialize();
+        Symbol s = lookup(name);
+        if (s!=null){
+            s.initialize();
+        }
     }
 }
