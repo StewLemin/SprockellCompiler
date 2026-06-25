@@ -17,7 +17,7 @@ public class SymbolTable {
         scopesList.add(new HashMap<String,Symbol>());
     }
 
-    public void existScope() {
+    public void exitScope() {
         scopesList.remove(scopesList.size() - 1);
     }
 
