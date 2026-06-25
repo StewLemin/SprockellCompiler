@@ -19,8 +19,4 @@ public class IfNode extends StatementNode {
         this.thenBlock = thenBlock;
         this.elseBlock = elseBlock;
     }
-
-    public boolean hasElseBlock() {
-        return elseBlock != null;
-    }
 }
