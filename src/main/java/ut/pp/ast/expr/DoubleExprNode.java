@@ -7,7 +7,7 @@ public class DoubleExprNode extends ExprNode {
     public final String operator;
     public final ExprNode expr2;
 
-    DoubleExprNode(ExprNode expr1,String Operator,ExprNode expr2){
+    public DoubleExprNode(ExprNode expr1,String Operator,ExprNode expr2){
         this.expr1 = expr1;
         this.operator = Operator;
         this.expr2 = expr2;
