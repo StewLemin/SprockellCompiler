@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import ut.pp.ast.type.TypeNode;
 
 
 public class SymbolTable {
@@ -41,7 +40,7 @@ public class SymbolTable {
         return null;
     }
 
-    public void markIntiliazed(String name) {
+    public void markInitiliazed(String name) {
         Symbol s = lookup(name);
         if (s!=null){
             s.initialize();
