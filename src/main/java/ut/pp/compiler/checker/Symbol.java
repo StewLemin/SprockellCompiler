@@ -21,4 +21,7 @@ public class Symbol {
         return initialized;
     }
 
+    public TypeNode getType(){
+        return type;
+    }
 }
