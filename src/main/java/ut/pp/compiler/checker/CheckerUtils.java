@@ -17,6 +17,10 @@ public final class CheckerUtils {
             return false;
         }
 
+        if (first.isArray() != second.isArray()) {
+            return false;
+        }
+
         if (first.isArray()) {
             return Objects.equals(first.arrayLength, second.arrayLength);
         }
