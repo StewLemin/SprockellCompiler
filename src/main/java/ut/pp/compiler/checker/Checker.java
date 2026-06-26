@@ -20,6 +20,7 @@ public class Checker {
 
     private final SymbolTable symbols = new SymbolTable();
     public void check(ProgramNode program) {
+        errors.clear();
         symbols.enterScope();
 
         for(StatementNode statement : program.statements) {
@@ -29,7 +30,7 @@ public class Checker {
         symbols.exitScope();
 
         if (!errors.isEmpty()) {
-            //throw new TypeCheckException(errors);
+            throw new CheckerException(errors);
         }
     }
 
@@ -89,11 +90,11 @@ public class Checker {
             return null;
         }
 
-        TypeNode firsType = typeOfExpr(arrayLiteral.elements.get(0));
-        if (firsType == null) {
+        TypeNode firstType = typeOfExpr(arrayLiteral.elements.get(0));
+        if (firstType == null) {
             return null;
         }
-        if (firsType.isArray()) {
+        if (firstType.isArray()) {
             error("Nested arrays are not supported.");
             return null;
         }
@@ -101,13 +102,13 @@ public class Checker {
         for (int i = 1; i < arrayLiteral.elements.size(); i++) {
             TypeNode currentType = typeOfExpr(arrayLiteral.elements.get(i));
 
-            if(currentType != null && !CheckerUtils.sameType(firsType, currentType)) {
+            if(currentType != null && !CheckerUtils.sameType(firstType, currentType)) {
                 error("Array literal elements must all have the same type.");
                 return null;
             }
         }
 
-        return new TypeNode(firsType.kind, arrayLiteral.elements.size());
+        return new TypeNode(firstType.kind, arrayLiteral.elements.size());
     }
 
     private TypeNode typeOfDoubleExpr(DoubleExprNode doubleExpr) {
@@ -245,7 +246,7 @@ public class Checker {
 
         if (targetType != null && valueType != null && !CheckerUtils.sameType(targetType, valueType)) {
             error("Cannot assign value of type " + CheckerUtils.toString(valueType)
-                          + "to target of type " + CheckerUtils.toString(targetType) + ".");
+                          + " to target of type " + CheckerUtils.toString(targetType) + ".");
             return;
         }
 
@@ -278,7 +279,7 @@ public class Checker {
 
     private void checkIfNode(IfNode ifNode) {
         TypeNode condition = typeOfExpr(ifNode.condition);
-        if (!CheckerUtils.isBool(condition)) {
+        if (condition != null && !CheckerUtils.isBool(condition)) {
             error("If condition must be bool, but got " + CheckerUtils.toString(condition) + ".");
         }
 
@@ -291,7 +292,7 @@ public class Checker {
 
     private void checkWhileNode(WhileNode whileNode) {
         TypeNode condition = typeOfExpr(whileNode.expression);
-        if (!CheckerUtils.isBool(condition)) {
+        if (condition != null && !CheckerUtils.isBool(condition)) {
             error("While condition must be bool, but got " + CheckerUtils.toString(condition) + ".");
         }
 
