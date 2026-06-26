@@ -4,8 +4,10 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import ut.pp.compiler.ASTBuilder;
 import ut.pp.parser.MyLangLexer;
 import ut.pp.parser.MyLangParser;
+import ut.pp.ast.ProgramNode;
 
 public class Main {
     public static void main(String[] args) {
@@ -32,6 +34,9 @@ public class Main {
         MyLangParser parser = new MyLangParser(tokens);
 
         ParseTree tree = parser.program();
+        ASTBuilder builder = new ASTBuilder();
+        ProgramNode root = (ProgramNode) builder.visit(tree);
+
 
         System.out.println("Children: " + tree.getChildCount() + ", parsed text: " + tree.getText());
     }
