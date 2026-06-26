@@ -30,32 +30,32 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitDeclarationStatement(MyLangParser.DeclarationStatementContext ctx) {
-        return (StatementNode) visit(ctx.declaration());
+        return visit(ctx.declaration());
     }
 
     @Override
     public ASTNode visitAssignmentStatement(MyLangParser.AssignmentStatementContext ctx) {
-        return (StatementNode) visit(ctx.assignment());
+        return visit(ctx.assignment());
     }
 
     @Override
     public ASTNode visitPrintStatement(MyLangParser.PrintStatementContext ctx) {
-        return (StatementNode) visit(ctx.print());
+        return visit(ctx.print());
     }
 
     @Override
     public ASTNode visitIfStatement(MyLangParser.IfStatementContext ctx) {
-        return (StatementNode) visit(ctx.ifElse());
+        return visit(ctx.ifElse());
     }
 
     @Override
     public ASTNode visitWhileStatement(MyLangParser.WhileStatementContext ctx) {
-        return (StatementNode) visit(ctx.while_());
+        return visit(ctx.while_());
     }
 
     @Override
     public ASTNode visitBlockStatement(MyLangParser.BlockStatementContext ctx) {
-        return (StatementNode) visit(ctx.block());
+        return visit(ctx.block());
     }
 
     @Override
