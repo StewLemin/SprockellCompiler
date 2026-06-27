@@ -1,8 +1,13 @@
 package ut.pp.compiler.checker;
 
 import java.util.Objects;
+import java.util.Set;
+import java.util.HashSet;
 import ut.pp.ast.type.TypeKind;
 import ut.pp.ast.type.TypeNode;
+import ut.pp.ast.statement.BlockNode;
+import ut.pp.ast.StatementNode;
+import ut.pp.ast.statement.AssignmentNode;
 
 public final class CheckerUtils {
     private CheckerUtils() {
@@ -72,4 +77,25 @@ public final class CheckerUtils {
 
         return base;
     }
+
+    public static Set<String> checkForInitialization(BlockNode block,SymbolTable symbols){
+        Set<String> initVarSet = new HashSet<>();
+        if(block == null){
+            return initVarSet;
+        }
+        for(StatementNode statement : block.statements){
+            if(statement instanceof AssignmentNode assignment){
+                String varName = assignment.target.name;
+                Symbol sym = symbols.lookup(varName);
+                if (sym == null){
+                    continue;
+                }
+                if (!sym.isInitialized()){
+                   initVarSet.add(varName);
+                }
+            }
+        }
+        return initVarSet;
+    }
+
 }

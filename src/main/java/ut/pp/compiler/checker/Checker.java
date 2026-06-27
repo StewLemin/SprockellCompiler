@@ -2,7 +2,10 @@ package ut.pp.compiler.checker;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
@@ -179,19 +182,19 @@ public class Checker {
     }
 
     private TypeNode typeOfArray(ArrayNode array) {
-        Symbol symbol = symbols.lookup(array.arrayName);
+        Symbol symbol = symbols.lookup(array.name);
         if (symbol == null) {
-            error("Array '" + array.arrayName + "' is not declared.");
+            error("Array '" + array.name+ "' is not declared.");
             return null;
         }
 
         if (!symbol.isInitialized()) {
-            error("Array '" + array.arrayName + "' is used before initialization.");
+            error("Array '" + array.name + "' is used before initialization.");
         }
 
         TypeNode arrayType = symbol.getType();
         if (!arrayType.isArray()) {
-            error("'" + array.arrayName + "' is not an array.");
+            error("'" + array.name + "' is not an array.");
             return null;
         }
 
@@ -200,7 +203,7 @@ public class Checker {
             return null;
         }
         if (!CheckerUtils.isInt(indexType)) {
-            error("Array index of '" + array.arrayName + "' must be int.");
+            error("Array index of '" + array.name + "' must be int.");
             return null;
         }
 
@@ -283,12 +286,28 @@ public class Checker {
             error("If condition must be bool, but got " + CheckerUtils.toString(condition) + ".");
         }
 
+        Set<String> ifSet = CheckerUtils.checkForInitialization(ifNode.thenBlock,symbols);
         checkBlock(ifNode.thenBlock);
 
         if (ifNode.elseBlock != null) {
             checkBlock(ifNode.elseBlock);
         }
+
+        Set<String> elseSet = CheckerUtils.checkForInitialization(ifNode.elseBlock,symbols);
+        Set<String> oneBranchOnly = new HashSet<>(ifSet);
+        oneBranchOnly.addAll(elseSet);
+        Set<String> both = new HashSet<>(ifSet);
+        both.retainAll(elseSet);
+        oneBranchOnly.removeAll(both);
+        for(String v : oneBranchOnly) {
+            error("Variable '" + v + "' might not be initialized: it is only assigned in one branch");
+        }
+
+
     }
+
+
+
 
     private void checkWhileNode(WhileNode whileNode) {
         TypeNode condition = typeOfExpr(whileNode.expression);
