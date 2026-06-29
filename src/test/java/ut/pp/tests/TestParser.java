@@ -1,43 +1,184 @@
 package ut.pp.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
+import ut.pp.ast.ExprNode;
+import ut.pp.ast.StatementNode;
+import ut.pp.ast.expr.ArrayLiteralNode;
+import ut.pp.ast.expr.BoolNode;
+import ut.pp.ast.expr.DoubleExprNode;
+import ut.pp.ast.expr.SingleExprNode;
+import ut.pp.ast.statement.AssignmentNode;
+import ut.pp.ast.statement.DeclarationNode;
+import ut.pp.ast.statement.IfNode;
+import ut.pp.ast.statement.WhileNode;
+import ut.pp.compiler.parser.ASTBuilder;
+import ut.pp.compiler.parser.ParseException;
+import ut.pp.compiler.parser.ParserRunner;
 import ut.pp.parser.MyLangLexer;
 import ut.pp.parser.MyLangParser;
+import ut.pp.ast.ProgramNode;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class TestParser {
+    private ProgramNode buildAst(String input){
+        return ParserRunner.parse(input);
+    }
+
+
+
     @Test
-    public void oneHello() {
-        String input = "Hello";
-        MyLangLexer myLangLexer = new MyLangLexer(CharStreams.fromString(input));
-        CommonTokenStream tokens = new CommonTokenStream(myLangLexer);
-        MyLangParser parser = new MyLangParser(tokens);
-        ParseTree tree = parser.hellos();
-        assertEquals(2, tree.getChildCount()); // 1 for Hello, 1 for EOF
+    public void parseSimpleAddition(){
+        ProgramNode root = buildAst("int x = 1 + 2;");
+        DeclarationNode decl = (DeclarationNode) root.statements.get(0);
+        DoubleExprNode add =(DoubleExprNode) decl.value;
+        assertEquals("+",add.operator);
     }
 
     @Test
-    public void helloNewlineHello() {
-        String input = "Hello\nHello";
-        MyLangLexer myLangLexer = new MyLangLexer(CharStreams.fromString(input));
-        CommonTokenStream tokens = new CommonTokenStream(myLangLexer);
-        MyLangParser parser = new MyLangParser(tokens);
-        ParseTree tree = parser.hellos();
-        assertEquals(3, tree.getChildCount()); // 2 for Hello, 1 for EOF
+    public void multBindsTightherThanAdd(){
+        ProgramNode root = buildAst("x = 2 + 3 * 4;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode add = (DoubleExprNode) stmt.value;
+        DoubleExprNode mult = (DoubleExprNode) add.expr2;
+        assertEquals("+",add.operator);
+        assertEquals("*",mult.operator);
     }
 
     @Test
-    public void helloWorld() {
-        // Fails by design, "World" is not allowed
-        String input = "Hello World";
-        MyLangLexer myLangLexer = new MyLangLexer(CharStreams.fromString(input));
-        CommonTokenStream tokens = new CommonTokenStream(myLangLexer);
-        MyLangParser parser = new MyLangParser(tokens);
-        ParseTree tree = parser.hellos();
-        assertEquals(3, tree.getChildCount());
+    public void paransOverrideBindingRules(){
+        ProgramNode root = buildAst("x = (2 + 3) * 4;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode mult = (DoubleExprNode) stmt.value;
+        assertEquals("*", mult.operator);
+        DoubleExprNode add = (DoubleExprNode) mult.expr1;
+        assertEquals("+", add.operator);
+    }
+
+    @Test
+    public void leftAssociativeSameOrderOperations(){
+        ProgramNode root = buildAst("x = 10 - 3 - 2;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode first = (DoubleExprNode) stmt.value;
+        assertEquals("-", first.operator);
+        DoubleExprNode second = (DoubleExprNode) first.expr1;
+        assertEquals("-", second.operator);
+    }
+
+    @Test
+    public void comparisonAfterArithmetic(){
+        ProgramNode root = buildAst("x = 1 + 2 > 3;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode cmp = (DoubleExprNode) stmt.value;
+        assertEquals(">", cmp.operator);
+        DoubleExprNode add = (DoubleExprNode) cmp.expr1;
+        assertEquals("+", add.operator);
+    }
+
+
+    @Test
+    public void andBindsTighterThanOr() {
+        ProgramNode root = buildAst("b = TRUE && FALSE || TRUE;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode or = (DoubleExprNode) stmt.value;
+        assertEquals("||", or.operator);
+        assertEquals("&&", ((DoubleExprNode) or.expr1).operator);
+    }
+
+
+    @Test
+    public void eqBindsTighterThanAnd() {
+        ProgramNode root = buildAst("b = 1 == 2 && TRUE;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode and = (DoubleExprNode) stmt.value;
+        assertEquals("&&", and.operator);
+        assertEquals("==", ((DoubleExprNode) and.expr1).operator);
+    }
+
+
+    @Test
+    public void compBindsTighterThanEq() {
+        ProgramNode root = buildAst("b = 1 < 2 == TRUE;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode eq = (DoubleExprNode) stmt.value;
+        assertEquals("==", eq.operator);
+        assertEquals("<", ((DoubleExprNode) eq.expr1).operator);
+    }
+
+    @Test
+    public void notBindsBeforeAllOthers(){
+        ProgramNode root = buildAst("b = !TRUE && FALSE;");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        DoubleExprNode and = (DoubleExprNode) stmt.value;
+        assertEquals("&&", and.operator);
+        SingleExprNode not = (SingleExprNode) and.expr1;
+        assertEquals("!", not.operator);
+    }
+
+    @Test
+    public void notAppliesToParans(){
+        ProgramNode root = buildAst("b = !(TRUE || FALSE);");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        SingleExprNode booleanArithm = (SingleExprNode) stmt.value;
+        assertInstanceOf(DoubleExprNode.class,booleanArithm.expression);
+    }
+
+    @Test
+    public void boolUsedAsIfCondition() {
+        ProgramNode root = buildAst("if (TRUE && FALSE) { print 1; }");
+        assertInstanceOf(IfNode.class, root.statements.get(0));
+    }
+
+    @Test
+    public void rejectsOnSyntaxError(){
+        assertThrows(ParseException.class, () -> buildAst("int x = 2"));
+    }
+
+    @Test
+    public void rejectsBraceLessIfOrWhileBlock() {
+        assertThrows(ParseException.class, () -> buildAst("if (x) print 1"));
+    }
+
+    @Test
+    public void rejectsMissingCondition() {
+        assertThrows(ParseException.class, () -> buildAst("if () { print 1; }"));
+    }
+
+    @Test
+    public void elseAttachesToSamBlockIf() {
+        ProgramNode root = buildAst("if (a) { if (b) { print 1; } else { print 2; } }");
+        IfNode outer = (IfNode) root.statements.get(0);
+        assertNull(outer.elseBlock);
+        IfNode inner = (IfNode) outer.thenBlock.statements.get(0);
+        assertNotNull(inner.elseBlock);
+    }
+
+    @Test
+    public void emptyBlockParses() {
+        ProgramNode root = buildAst("while (TRUE) {}");
+        WhileNode node = (WhileNode) root.statements.get(0);
+        assertEquals(0, node.block.statements.size());
+    }
+
+    @Test
+    public void arrayLiteralParses() {
+        ProgramNode root = buildAst("x = [1, 2, 3];");
+        AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
+        assertInstanceOf(ArrayLiteralNode.class, stmt.value);
+    }
+
+    @Test
+    public void arrayIndexingParses() {
+        ProgramNode root = buildAst("x = a[2];");
+    }
+
+    @Test
+    public void arrayDeclarationParses(){
+        ProgramNode root = buildAst("int[5] a;");
+        assertInstanceOf(DeclarationNode.class, root.statements.get(0));
     }
 }
