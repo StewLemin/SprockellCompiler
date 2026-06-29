@@ -1,7 +1,7 @@
 package ut.pp.compiler.codegen;
 
 import ut.pp.ast.type.TypeNode;
-import java.util.Objects;
+
 
 
 
@@ -14,12 +14,12 @@ public class    MemoryLocation {
 
     public MemoryLocation(String name, TypeNode type, int firstAdress){
 
-//        if (name == null) {
-//            throw new CodeGeneratorException("Variable name cannot be null.");
-//        }
-//        if (type == null) {
-//            throw new CodeGeneratorException("Variable type cannot be null.");
-//        }
+        if (name == null) {
+            throw new CodeGeneratorException("Variable name cannot be null.");
+        }
+        if (type == null) {
+            throw new CodeGeneratorException("Variable type cannot be null.");
+        }
 
         this.name = name;
         this.type = type;
@@ -28,9 +28,9 @@ public class    MemoryLocation {
 
 
         if(type.isArray()){
-//            if (type.arrayLength == null || type.arrayLength <= 0) {
-//                throw new CodeGeneratorException("Invalid array size for variable '" + name + "'.");
-//            }
+            if (type.arrayLength == null || type.arrayLength <= 0) {
+                throw new CodeGeneratorException("Invalid array size for variable '" + name + "'.");
+            }
             this.cellCount = type.arrayLength;
         }else {
             this.cellCount = 1;
@@ -63,17 +63,17 @@ public class    MemoryLocation {
 
     public int adressOfElement(int i){
         if (!isArray()) {
-//            if (i != 0) {
-//                throw new CodeGeneratorException("Variable '" + name + "' is not an array.");
-//            }
+            if (i != 0) {
+                throw new CodeGeneratorException("Variable '" + name + "' is not an array.");
+            }
             return firstAdress;
     }
 
-//        if (i < 0 || i >= cellCount) {
-//            throw new CodeGeneratorException(
-//                    "Array index " + i + " out of bounds for '" + name + "'."
-//            );
-//        }
+        if (i < 0 || i >= cellCount) {
+            throw new CodeGeneratorException(
+                    "Array index " + i + " out of bounds for '" + name + "'."
+            );
+        }
 
         return firstAdress + i;
     }

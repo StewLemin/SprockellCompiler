@@ -17,23 +17,23 @@ public class MemoryManager {
     }
 
     public void leaveScope(){
-//        if(scopes.size() <= 1){
-//            throw new CodeGeneratorException("Cannot exit global memory scope.");
-//        }
+        if(scopes.size() <= 1){
+            throw new CodeGeneratorException("Cannot exit global memory scope.");
+        }
         scopes.pop();
     }
 
     public MemoryLocation declare(String name, TypeNode type){
         Map<String, MemoryLocation> scope = scopes.peek();
-//        if (scope == null) {
-//            throw new CodeGeneratorException("No active memory scope.");
-//        }
+        if (scope == null) {
+            throw new CodeGeneratorException("No active memory scope.");
+        }
 
-//        if(scope.containsKey(name)){
-//            throw new CodeGeneratorException(
-//                    "Variable '" + name + "' is already declared in this scope."
-//            );
-//        }
+        if(scope.containsKey(name)){
+            throw new CodeGeneratorException(
+                    "Variable '" + name + "' is already declared in this scope."
+            );
+        }
 
         MemoryLocation location = new MemoryLocation(name,type,nextFreeAdress);
         scope.put(name,location);
@@ -51,7 +51,7 @@ public class MemoryManager {
                 return location;
             }
         }
-       // throw new CodeGeneratorException("Unknown variable: "+name);
+        throw new CodeGeneratorException("Unknown variable: "+name);
 
     }
 
