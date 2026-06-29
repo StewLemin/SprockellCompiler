@@ -1,4 +1,4 @@
-package ut.pp.compiler;
+package ut.pp.compiler.parser;
 
 
 import ut.pp.ast.ASTNode;

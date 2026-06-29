@@ -90,11 +90,9 @@ public final class CheckerUtils {
                 if (sym == null){
                     continue;
                 }
-                if (!sym.isInitialized()){
-                   initVarSet.add(varName);
+                initVarSet.add(varName);
                 }
             }
-        }
         return initVarSet;
     }
 
