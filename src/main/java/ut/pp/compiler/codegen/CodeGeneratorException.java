@@ -1,4 +1,7 @@
 package ut.pp.compiler.codegen;
 
-public class CodeGeneratorException {
+public final class CodeGeneratorException extends RuntimeException{
+    public CodeGeneratorException(String message) {
+        super(message);
+    }
 }
