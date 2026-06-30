@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.StatementNode;
+import ut.pp.ast.concurrency.*;
 import ut.pp.ast.expr.ArrayLiteralNode;
 import ut.pp.ast.expr.BoolNode;
 import ut.pp.ast.expr.DoubleExprNode;
@@ -181,4 +182,74 @@ public class TestParser {
         ProgramNode root = buildAst("int[5] a;");
         assertInstanceOf(DeclarationNode.class, root.statements.get(0));
     }
+
+    @Test
+    public void forkParsesForkNode() {
+        ProgramNode root = buildAst("fork { print 21; }");
+        assertInstanceOf(ForkNode.class, root.statements.get(0));
+    }
+
+    @Test
+    public void forkParsesMultipleStatementsInBlock() {
+        ProgramNode root = buildAst("fork { print 16; int x = 23; }");
+        ForkNode fork = (ForkNode) root.statements.get(0);
+        assertEquals(2, fork.body.statements.size());
+    }
+
+    @Test
+    public void joinParsesToJoinNode() {
+        ProgramNode root = buildAst("join;");
+        assertInstanceOf(JoinNode.class, root.statements.get(0));
+    }
+
+    @Test
+    public void multipleForksThenJoin() {
+        ProgramNode root = buildAst("fork { print 273; } fork { x = 2 * 999; } join;");
+        assertInstanceOf(ForkNode.class, root.statements.get(0));
+        assertInstanceOf(ForkNode.class, root.statements.get(1));
+        assertInstanceOf(JoinNode.class, root.statements.get(2));
+    }
+
+    @Test
+    public void nestedForkNodesParse() {
+        ProgramNode root = buildAst("fork { fork { print 61; } }");
+        ForkNode outer = (ForkNode) root.statements.get(0);
+        assertInstanceOf(ForkNode.class, outer.body.statements.get(0));
+    }
+
+    @Test
+    public void lockDeclParsesToLockNode() {
+        ProgramNode root = buildAst("lock bankLock;");
+        assertInstanceOf(LockNode.class, root.statements.get(0));
+    }
+
+    @Test
+    public void acquireLockParsesToLockOpAQ() {
+        ProgramNode root = buildAst("acquire(auraLock);");
+        LockOpNode op = (LockOpNode) root.statements.get(0);
+        assertEquals(LockOp.ACQUIRE, op.operation);
+    }
+
+    @Test
+    public void releaseParsesToLockOpREL() {
+        ProgramNode root = buildAst("release(auraLock);");
+        LockOpNode op = (LockOpNode) root.statements.get(0);
+        assertEquals(LockOp.RELEASE, op.operation);
+    }
+
+    @Test
+    public void sharedDeclarationHasSharedFlag() {
+        ProgramNode root = buildAst("shared int balance = 0;");
+        DeclarationNode decl = (DeclarationNode) root.statements.get(0);
+        assertTrue(decl.isShared);
+    }
+
+    @Test
+    public void nonSharedDeclarationNoSharedFlag() {
+        ProgramNode root = buildAst("int x = 0;");
+        DeclarationNode decl = (DeclarationNode) root.statements.get(0);
+        assertFalse(decl.isShared);
+    }
+
+
 }
