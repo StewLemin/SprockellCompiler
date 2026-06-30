@@ -258,13 +258,13 @@ public class Checker {
         }
     }
 
+    //now this should work and support
     private void checkDeclaration(DeclarationNode declaration) {
         if (symbols.isDeclaredInCurrScope(declaration.identifier)) {
             error("Variable '" + declaration.identifier + "' is already declared in this scope.");
             return;
         }
 
-        boolean initialized = false;
         if (declaration.value != null) {
             TypeNode valueType = typeOfExpr(declaration.value);
 
@@ -272,14 +272,13 @@ public class Checker {
                 error("Cannot initialize variable '" + declaration.identifier
                               + "' of type " + CheckerUtils.toString(declaration.type)
                               + " with value of type " + CheckerUtils.toString(valueType) + ".");
-            } else if (valueType != null) {
-                initialized = true;
             }
         }
 
-        symbols.declare(declaration.identifier, declaration.type, initialized);
+        symbols.declare(declaration.identifier, declaration.type, true);
     }
 
+    //TODO prolly we will have to change this since it handles dumb baka matei doggy uninitialization
     private void checkIfNode(IfNode ifNode) {
         TypeNode condition = typeOfExpr(ifNode.condition);
         if (condition != null && !CheckerUtils.isBool(condition)) {
@@ -302,12 +301,7 @@ public class Checker {
         for(String v : oneBranchOnly) {
             error("Variable '" + v + "' might not be initialized: it is only assigned in one branch");
         }
-
-
     }
-
-
-
 
     private void checkWhileNode(WhileNode whileNode) {
         TypeNode condition = typeOfExpr(whileNode.expression);
@@ -329,7 +323,6 @@ public class Checker {
     }
 
     private void checkPrint(PrintNode print) {
-        //if code generator will not print arrays, add condition to reject it
         typeOfExpr(print.expression);
     }
 
