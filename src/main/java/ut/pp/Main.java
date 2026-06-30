@@ -20,7 +20,11 @@ public class Main {
                 int x = 5;
                 int y = x + 3;
                 bool bigger = y > 5;
-
+                int[3] arr;
+                arr = [1,2,3];
+                arr[0] = 4;
+                enum name{RED,PULA,REGELE};
+                
                 if (bigger) {
                     print y;
                 }

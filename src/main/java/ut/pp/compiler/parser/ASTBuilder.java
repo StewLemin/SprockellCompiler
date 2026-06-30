@@ -105,17 +105,33 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
     }
 
     @Override
+    public ASTNode visitEnumDeclarationStatement(MyLangParser.EnumDeclarationStatementContext ctx) {
+        return visit(ctx.enumDeclaration());
+    }
+
+    @Override
     public ASTNode visitDeclaration(MyLangParser.DeclarationContext ctx) {
         TypeNode type = (TypeNode) visit(ctx.type());
         String name = ctx.ID().getText();
         boolean isShared = ctx.SHARED() != null;
 
         if (ctx.expr() == null) {
-            return new DeclarationNode(type, name,isShared);
+            return new DeclarationNode(type, name, isShared);
         }
 
         ExprNode initializer = (ExprNode) visit(ctx.expr());
         return new DeclarationNode(type, name, isShared, initializer);
+    }
+
+    public ASTNode visitEnumDeclaration(MyLangParser.EnumDeclarationContext ctx) {
+        String enumName = ctx.ID(0).getText();
+        List<String> values = new ArrayList<>();
+
+        for (int i = 1; i < ctx.ID().size(); i++) {
+            values.add(ctx.ID(i).getText());
+        }
+
+        return new EnumNode(enumName, values);
     }
 
     @Override
@@ -154,12 +170,21 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         } else if (baseType.equals("bool")) {
             kind = TypeKind.BOOL;
         } else {
-            throw new IllegalArgumentException("Unknown type: " + baseType);
+            kind = TypeKind.ENUM;
         }
 
-        if(ctx.INT() != null) {
-            return new TypeNode(kind, Integer.parseInt(ctx.INT().getText()));
+        if (ctx.INT() != null) {
+            int arrayLength = Integer.parseInt(ctx.INT().getText());
+            if (kind == TypeKind.ENUM) {
+                return new TypeNode(kind, baseType, arrayLength);
+            }
+            return new TypeNode(kind, arrayLength);
         }
+        if (kind == TypeKind.ENUM) {
+            return new TypeNode(kind, baseType);
+        }
+
+
 
         return new TypeNode(kind);
     }
