@@ -26,9 +26,17 @@ public final class CheckerUtils {
             return false;
         }
 
+        if (first.kind == TypeKind.ENUM) {
+            if (!Objects.equals(first.typeName, second.typeName)) {
+                return false;
+            }
+        }
+
         if (first.isArray()) {
             return Objects.equals(first.arrayLength, second.arrayLength);
         }
+
+
 
         return true;
     }
@@ -53,6 +61,9 @@ public final class CheckerUtils {
         if (arrayType == null || !arrayType.isArray()) {
             return null;
         }
+        if (arrayType.kind == TypeKind.ENUM) {
+            return new TypeNode(TypeKind.ENUM, arrayType.typeName);
+        }
 
         return new TypeNode(arrayType.kind);
     }
@@ -61,20 +72,19 @@ public final class CheckerUtils {
         if (type == null) {
             return "<unknown>";
         }
-
         String base;
         if (type.kind == TypeKind.INT) {
             base = "int";
         } else if (type.kind == TypeKind.BOOL) {
             base = "bool";
+        } else if (type.kind == TypeKind.ENUM) {
+            base = type.typeName;
         } else {
             base = "<unknown>";
         }
-
         if (type.isArray()) {
             return base + "[" + type.arrayLength + "]";
         }
-
         return base;
     }
 

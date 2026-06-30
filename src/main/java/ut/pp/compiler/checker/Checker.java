@@ -50,7 +50,9 @@ public class Checker {
             checkBlock(block);
         } else if(statement instanceof PrintNode print) {
             checkPrint(print);
-        } else {
+        } else if(statement instanceof EnumNode enumDeclaration) {
+            checkEnumDeclaration(enumDeclaration);
+        }else {
             //TODO: add personalized error for statement
         }
     }
@@ -111,6 +113,10 @@ public class Checker {
             }
         }
 
+        if (firstType.kind == TypeKind.ENUM) {
+            return new TypeNode(TypeKind.ENUM, firstType.typeName, arrayLiteral.elements.size());
+        }
+
         return new TypeNode(firstType.kind, arrayLiteral.elements.size());
     }
 
@@ -123,10 +129,19 @@ public class Checker {
         }
 
         switch (doubleExpr.operator) {
-            case "+", "-", "*" -> {
+            case "+", "-", "*", "/" -> {
                 if (!CheckerUtils.isInt(left) || !CheckerUtils.isInt(right)) {
                     error("Operator " + doubleExpr.operator + " requires int operands.");
                     return null;
+                }
+                if(doubleExpr.operator.equals("/")){
+                    if(doubleExpr.expr2 instanceof IntNode){
+                        IntNode intNode = (IntNode) doubleExpr.expr2;
+                        if(intNode.value == 0){
+                            error("You can not divide with a 0!");
+                            return null;
+                        }
+                    }
                 }
 
                 return CheckerUtils.intType();
@@ -212,16 +227,20 @@ public class Checker {
 
     private TypeNode typeOfVariable(VariableNode var) {
         Symbol symbol = symbols.lookup(var.name);
-        if (symbol == null) {
-            error("Variable '" + var.name + "' is not declared.");
-            return null;
+
+        if (symbol != null) {
+            if (!symbol.isInitialized()) {
+                error("Variable '" + var.name + "' is used before initialization.");
+            }
+            return symbol.getType();
         }
 
-        if (!symbol.isInitialized()) {
-            error("Variable '" + var.name + "' is used before initialization.");
+        if (symbols.isEnumVal(var.name)) {
+            String enumTypeName = symbols.enumTypeOfVal(var.name);
+            return new TypeNode(TypeKind.ENUM, enumTypeName);
         }
-
-        return symbol.getType();
+        error("Variable or enum value '" + var.name + "' is not declared.");
+        return null;
     }
 
     private TypeNode typeOfAssignmentTarget(VarNode target) {
@@ -261,6 +280,12 @@ public class Checker {
     private void checkDeclaration(DeclarationNode declaration) {
         if (symbols.isDeclaredInCurrScope(declaration.identifier)) {
             error("Variable '" + declaration.identifier + "' is already declared in this scope.");
+            return;
+        }
+
+
+        if (declaration.type.kind == TypeKind.ENUM && !symbols.isEnumType(declaration.type.typeName)) {
+            error("Unknown enum type '" + declaration.type.typeName + "'.");
             return;
         }
 
@@ -331,6 +356,22 @@ public class Checker {
     private void checkPrint(PrintNode print) {
         //if code generator will not print arrays, add condition to reject it
         typeOfExpr(print.expression);
+    }
+
+
+    private void checkEnumDeclaration(EnumNode enumDecl) {
+        Set<String> viewd = new HashSet<>();
+        for (String value : enumDecl.enumValues) {
+            if (viewd.contains(value)) {
+                error("PROBLEM Duplicate enum value'" + value + "'.");
+                return;
+            }
+            viewd.add(value);
+        }
+
+        if (!symbols.declareEnum(enumDecl.name, enumDecl.enumValues)) {
+            error("PROBLEM Enum name or enum value is already declared.");
+        }
     }
 
     private void error(String message) {

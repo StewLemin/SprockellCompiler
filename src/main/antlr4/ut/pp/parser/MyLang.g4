@@ -11,6 +11,7 @@ statement:
     |ifElse # IfStatement
     |while # WhileStatement
     |block # BlockStatement
+    |enumDeclaration ';' # EnumDeclarationStatement
     ;
 
 declaration:
@@ -28,9 +29,8 @@ assignment:
 
 // dont forget to make it modular
 type:
-    'int' ('[' INT ']')?
-    |'bool' ('[' INT ']')?
-   ;
+    ('int' | 'bool' | ID) ('[' INT ']')?
+    ;
 
 BOOL:
     'TRUE'
@@ -62,9 +62,13 @@ print:
     'print' expr
     ;
 
+enumDeclaration:
+    'enum' ID '{' ID (',' ID)* '}'
+    ;
+
 expr:
     '!' expr # NotExpr
-    |expr '*' expr # MulExpr
+    |expr ('*' | '/') expr # MulExpr
     |expr ('+' | '-')  expr # AddSubExpr
     |expr ('<' | '<=' | '>=' | '>') expr # CompareExpr
     |expr ('==' | '!=') expr # EqualityExpr
