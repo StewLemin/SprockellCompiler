@@ -9,6 +9,7 @@ import java.util.Set;
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
+import ut.pp.ast.concurrency.LockNode;
 import ut.pp.ast.expr.*;
 import ut.pp.ast.statement.*;
 import ut.pp.ast.type.TypeKind;
@@ -50,7 +51,10 @@ public class Checker {
             checkBlock(block);
         } else if(statement instanceof PrintNode print) {
             checkPrint(print);
-        } else {
+        } else if(statement instanceof LockNode lock){
+            checkLockDecl(lock);
+        }
+        else {
             //TODO: add personalized error for statement
         }
     }
@@ -324,7 +328,6 @@ public class Checker {
         for(StatementNode statement : block.statements) {
             checkStatement(statement);
         }
-
         symbols.exitScope();
     }
 
@@ -332,6 +335,11 @@ public class Checker {
         //if code generator will not print arrays, add condition to reject it
         typeOfExpr(print.expression);
     }
+
+   private void checkLockDecl(LockNode lock){
+        SymbolTable symbols = new SymbolTable();
+   }
+
 
     private void error(String message) {
         errors.add(message);

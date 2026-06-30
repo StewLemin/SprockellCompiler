@@ -46,4 +46,13 @@ public class SymbolTable {
             s.initialize();
         }
     }
+
+    public void declareLock(String name){
+        if(!isDeclaredInCurrScope(name)) {
+            Symbol lock = new Symbol(name, null, true, true);
+
+        }
+    }
+
+
 }
