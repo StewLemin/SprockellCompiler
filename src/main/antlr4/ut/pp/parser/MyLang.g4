@@ -11,10 +11,35 @@ statement:
     |ifElse # IfStatement
     |while # WhileStatement
     |block # BlockStatement
+    |lockDecl ';' #LockDeclStatement
+    |lockOp ';'#LockOpStatement
+    |fork #ForkStatement
+    |join ';' #JoinStatement
+    ;
+
+lockDecl:
+    'lock' ID
+    ;
+
+lockOp:
+    'acquire''('ID')'
+    |'release''('ID')'
+    ;
+
+fork:
+    'fork' block
+    ;
+
+join:
+    'join'
     ;
 
 declaration:
-    type ID ('=' expr)?
+    (SHARED)? type ID ('=' expr)?
+    ;
+
+SHARED:
+    'shared'
     ;
 
 var:

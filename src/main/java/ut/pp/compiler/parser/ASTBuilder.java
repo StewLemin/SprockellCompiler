@@ -11,6 +11,11 @@ import ut.pp.ast.type.*;
 import ut.pp.ast.variable.*;
 import ut.pp.parser.MyLangBaseVisitor;
 import ut.pp.parser.MyLangParser;
+import ut.pp.ast.concurrency.LockOpNode;
+import ut.pp.ast.concurrency.LockNode;
+import ut.pp.ast.concurrency.LockOp;
+import ut.pp.ast.concurrency.JoinNode;
+import ut.pp.ast.concurrency.ForkNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,16 +64,58 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
     }
 
     @Override
+    public ASTNode visitLockDeclStatement(MyLangParser.LockDeclStatementContext ctx) {
+        return visit(ctx.lockDecl());
+    }
+
+    @Override
+    public ASTNode visitLockDecl(MyLangParser.LockDeclContext ctx)
+    {
+        return new LockNode(ctx.ID().getText());
+    }
+
+    @Override
+    public ASTNode visitLockOpStatement(MyLangParser.LockOpStatementContext ctx) {
+        return visit(ctx.lockOp());
+    }
+
+    @Override
+    public ASTNode visitLockOp(MyLangParser.LockOpContext ctx){
+        String name = ctx.ID().getText();
+        if(ctx.getChild(0).getText().equals("acquire")){
+            return new LockOpNode(name,LockOp.ACQUIRE);
+        }
+        return new LockOpNode(name,LockOp.RELEASE);
+    }
+
+    @Override
+    public ASTNode visitForkStatement(MyLangParser.ForkStatementContext ctx){
+        BlockNode block = (BlockNode) visit(ctx.fork());
+        return new ForkNode(block);
+    }
+
+    @Override
+    public ASTNode visitFork(MyLangParser.ForkContext ctx){
+        return visitBlock(ctx.block());
+    }
+
+    @Override
+    public ASTNode visitJoinStatement(MyLangParser.JoinStatementContext ctx){
+        return new JoinNode();
+    }
+
+    @Override
     public ASTNode visitDeclaration(MyLangParser.DeclarationContext ctx) {
         TypeNode type = (TypeNode) visit(ctx.type());
         String name = ctx.ID().getText();
+        boolean isShared = ctx.SHARED() != null;
 
         if (ctx.expr() == null) {
-            return new DeclarationNode(type, name);
+            return new DeclarationNode(type, name,isShared);
         }
 
         ExprNode initializer = (ExprNode) visit(ctx.expr());
-        return new DeclarationNode(type, name, initializer);
+        return new DeclarationNode(type, name, isShared, initializer);
     }
 
     @Override
