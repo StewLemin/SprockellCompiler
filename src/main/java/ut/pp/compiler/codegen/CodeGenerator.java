@@ -11,6 +11,8 @@ import ut.pp.ast.variable.ArrayNode;
 import ut.pp.ast.variable.VariableNode;
 
 public class CodeGenerator {
+    private static final int DIVISION_BY_ZERO_ERROR = -99999999;
+
     private final SprilProgram code;
     private final MemoryManager memory;
 
@@ -152,10 +154,11 @@ public class CodeGenerator {
             throw new CodeGeneratorException("Variable '" + array.name + "' is not an array.");
         }
 
-        //calculate the address ofc first
+        //calculate the address z§first
         generateExpr(array.index);
         code.emit(Spril.pop(Spril.REG_A));
         code.emit(Spril.load(Spril.immValue(location.getFirstAdress()), Spril.REG_B));
+        //regB will contain the memory address we want to write into
         code.emit(Spril.compute("Add", Spril.REG_B, Spril.REG_A, Spril.REG_B));
         code.emit(Spril.push(Spril.REG_B));
         generateExpr(value);
@@ -184,6 +187,7 @@ public class CodeGenerator {
         generateExpr(ifNode.condition);
         code.emit(Spril.pop(Spril.REG_A));
 
+        //temporary address for the then block using Abs -1
         int branchToThenIndex = code.emit(Spril.branch(Spril.REG_A, Spril.abs(-1)));
         if (ifNode.elseBlock != null) {
             generateBlock(ifNode.elseBlock);
@@ -191,25 +195,30 @@ public class CodeGenerator {
 
         int jumpToEndIndex = code.emit(Spril.jump(Spril.abs(-1)));
         int thenStart = code.size();
+        //we patch the previous branch so we can jump
         code.patch(Spril.branch(Spril.REG_A, Spril.abs(thenStart)), branchToThenIndex);
         generateBlock(ifNode.thenBlock);
 
+        //create instruction to jump into
         int end = code.size();
         code.patch(Spril.jump(Spril.abs(end)), jumpToEndIndex);
     }
 
     private void generateWhile(WhileNode whileNode) {
+        //loop condition to jump back
         int conditionStart = code.size();
         generateExpr(whileNode.expression);
         code.emit(Spril.pop(Spril.REG_A));
 
+        //temporary addressees to patch later
         int branchToBodyIndex = code.emit(Spril.branch(Spril.REG_A, Spril.abs(-1)));
         int jumpToEndIndex = code.emit(Spril.jump(Spril.abs(-1)));
-
+        //loop body
         int bodyStart = code.size();
         code.patch(Spril.branch(Spril.REG_A, Spril.abs(bodyStart)), branchToBodyIndex);
         generateBlock(whileNode.block);
         code.emit(Spril.jump(Spril.abs(conditionStart)));
+        //instruction after the while
         int end = code.size();
         code.patch(Spril.jump(Spril.abs(end)), jumpToEndIndex);
     }
@@ -320,7 +329,7 @@ public class CodeGenerator {
         // REG_E = temporary
 
         //check div by 0
-        //here we store in regG the value denominator == zero
+        //here we store in regC(temporary) the value denominator == zero
         code.emit(Spril.compute("Equal", Spril.REG_B, Spril.ZERO, Spril.REG_C));
         //and based on that we decide if we jump to errorStart or afterError
         //creating the necessary jump addressees
@@ -331,7 +340,7 @@ public class CodeGenerator {
         int errorStart = code.size();
         code.patch(Spril.branch(Spril.REG_C, Spril.abs(errorStart)), branchError);
         //in immValue we are gonna send a fixed value that will represent our type of error
-        code.emit(Spril.load(Spril.immValue(-99999999), Spril.REG_A));
+        code.emit(Spril.load(Spril.immValue(DIVISION_BY_ZERO_ERROR), Spril.REG_A));
         code.emit(Spril.writeInstr(Spril.REG_A, Spril.NUMBER_IO));
         //this stops the program
         code.emit(Spril.endProg());
