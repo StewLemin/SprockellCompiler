@@ -360,7 +360,7 @@ public class Checker {
 
    private void checkLockDecl(LockNode lock){
         if(symbols.isDeclaredInCurrScope(lock.identifier)){
-            error("Lock '" + lock.identifier + "' already defined in current scope");
+            error("Identifier '" + lock.identifier + "' already defined in current scope");
             return;
         }
 

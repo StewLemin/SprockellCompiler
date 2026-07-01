@@ -187,6 +187,13 @@ public class TestChecker {
     }
 
     @Test
-    public void rejectsRedeclaration(){}
+    public void rejectsRedeclaration(){
+        assertThrows(CheckerException.class,() -> check("lock aura; lock aura;"));
+    }
+
+    @Test
+    public void rejectLockWithSameIdentifierAsVar(){
+        assertThrows(CheckerException.class,() -> check("int terzic; lock terzic;"));
+    }
 
 }
