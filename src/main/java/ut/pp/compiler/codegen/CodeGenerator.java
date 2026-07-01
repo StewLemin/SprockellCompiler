@@ -27,7 +27,7 @@ public class CodeGenerator {
     }
 
     public String generateHaskell(ProgramNode program) {
-        return new HaskellEmitter().emit(generate(program));
+        return new HaskellOutput().emit(generate(program));
     }
 
     private void generateProgram(ProgramNode program) {

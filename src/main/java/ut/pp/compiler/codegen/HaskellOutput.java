@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class HaskellEmitter {
+public class HaskellOutput {
 
     public String emit(List<String> instructions) {
         StringBuilder result = new StringBuilder();
