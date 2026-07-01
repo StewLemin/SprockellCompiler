@@ -1,9 +1,11 @@
 package ut.pp.compiler.codegen;
 
+import java.beans.Statement;
 import java.util.List;
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
+import ut.pp.ast.concurrency.*;
 import ut.pp.ast.expr.*;
 import ut.pp.ast.statement.*;
 import ut.pp.ast.type.TypeNode;
@@ -51,10 +53,30 @@ public class CodeGenerator {
             generateWhile(whileNode);
         } else if (statement instanceof BlockNode block) {
             generateBlock(block);
+        } else if (statement instanceof LockNode lock) {
+            generateLock(lock);
+        } else if (statement instanceof LockOpNode lockOp) {
+            generateLockOp(lockOp);
+        } else if (statement instanceof ForkNode fork) {
+            generateFork(fork);
+        } else if (statement instanceof JoinNode join) {
+            generateJoin(join);
         } else {
             throw new CodeGeneratorException("Unsupported statement: "
                                                      + statement.getClass().getSimpleName());
         }
+    }
+
+    private void generateJoin(JoinNode join) {
+    }
+
+    private void generateFork(ForkNode fork) {
+    }
+
+    private void generateLockOp(LockOpNode lockOp) {
+    }
+
+    private void generateLock(LockNode lock) {
     }
 
     private void generateDeclaration(DeclarationNode declaration) {
