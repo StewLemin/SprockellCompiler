@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.Stack;
 public class MemoryManager {
     private final Stack <Map <String,MemoryLocation>> scopes = new Stack<>();
+    private final Map<String,MemoryLocation> sharedMemory = new HashMap<>();
     private int nextFreeAdress = 0;
+    private int nextSharedAddress = 0;
 
     public void newScope(){
         scopes.push(new HashMap<>());
@@ -13,7 +15,6 @@ public class MemoryManager {
     }
     public MemoryManager(){
         newScope();
-
     }
 
     public void leaveScope(){
@@ -23,16 +24,20 @@ public class MemoryManager {
         scopes.pop();
     }
 
-    public MemoryLocation declare(String name, TypeNode type){
-        Map<String, MemoryLocation> scope = scopes.peek();
-        if (scope == null) {
-            throw new CodeGeneratorException("No active memory scope.");
-        }
+    public MemoryLocation declare(String name, TypeNode type, boolean isShared){
+        //if(isShared){
+            //skip for now
+        //}
+        //else{
+            Map<String, MemoryLocation> scope = scopes.peek();
+            if (scope == null) {
+                throw new CodeGeneratorException("No active memory scope.");
+            }
 
-        if(scope.containsKey(name)){
-            throw new CodeGeneratorException(
-                    "Variable '" + name + "' is already declared in this scope."
-            );
+            if(scope.containsKey(name)){
+                throw new CodeGeneratorException(
+                        "Variable '" + name + "' is already declared in this scope."
+                );
         }
 
         MemoryLocation location = new MemoryLocation(name,type,nextFreeAdress);
@@ -40,7 +45,7 @@ public class MemoryManager {
         nextFreeAdress += location.getCellCount();
         return location;
 
-    }
+        }
 
 
     public MemoryLocation search (String name){

@@ -58,7 +58,7 @@ public class CodeGenerator {
     }
 
     private void generateDeclaration(DeclarationNode declaration) {
-        MemoryLocation location = memory.declare(declaration.identifier, declaration.type);
+        MemoryLocation location = memory.declare(declaration.identifier, declaration.type,declaration.isShared);
 
         if (declaration.value == null) {
             generateDefaultValue(location);
