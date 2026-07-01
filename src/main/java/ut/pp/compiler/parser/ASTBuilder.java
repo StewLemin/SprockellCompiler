@@ -153,7 +153,7 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         String name = ctx.ID().getText();
 
         if(ctx.expr() == null) {
-            return  new VariableNode(name);
+            return new VariableNode(name);
         }
 
         ExprNode index = (ExprNode) visit(ctx.expr());
@@ -199,7 +199,7 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
             return new IfNode(condition, thenBlock);
         }
 
-        BlockNode elseBlock = (BlockNode) visit((ctx.block(1)));
+        BlockNode elseBlock = (BlockNode) visit(ctx.block(1));
         return new IfNode(condition, thenBlock, elseBlock);
     }
 
