@@ -11,8 +11,9 @@ public class    MemoryLocation {
     private final TypeNode type;
     private final int firstAdress;
     private final int cellCount;
+    private boolean isShared;
 
-    public MemoryLocation(String name, TypeNode type, int firstAdress){
+    public MemoryLocation(String name, TypeNode type, int firstAdress,boolean isShared){
 
         if (name == null) {
             throw new CodeGeneratorException("Variable name cannot be null.");
@@ -23,7 +24,7 @@ public class    MemoryLocation {
 
         this.name = name;
         this.type = type;
-
+        this.isShared = isShared;
         this.firstAdress = firstAdress;
 
 

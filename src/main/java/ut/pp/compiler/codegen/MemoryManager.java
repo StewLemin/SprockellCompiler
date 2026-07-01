@@ -25,27 +25,25 @@ public class MemoryManager {
     }
 
     public MemoryLocation declare(String name, TypeNode type, boolean isShared){
-        //if(isShared){
-            //skip for now
-        //}
-        //else{
+        if(isShared){
+            MemoryLocation location = new MemoryLocation(name,type,nextSharedAddress,true);
+            sharedMemory.put(name,location);
+            nextSharedAddress += location.getCellCount();
+            return location;
+        }
+
+        else{
             Map<String, MemoryLocation> scope = scopes.peek();
             if (scope == null) {
                 throw new CodeGeneratorException("No active memory scope.");
             }
-
-            if(scope.containsKey(name)){
-                throw new CodeGeneratorException(
-                        "Variable '" + name + "' is already declared in this scope."
-                );
+            MemoryLocation location = new MemoryLocation(name,type,nextFreeAdress,false);
+            scope.put(name,location);
+            nextFreeAdress += location.getCellCount();
+            return location;
         }
+    }
 
-        MemoryLocation location = new MemoryLocation(name,type,nextFreeAdress);
-        scope.put(name,location);
-        nextFreeAdress += location.getCellCount();
-        return location;
-
-        }
 
 
     public MemoryLocation search (String name){
@@ -55,6 +53,10 @@ public class MemoryManager {
             if(location != null){
                 return location;
             }
+        }
+        MemoryLocation shared = sharedMemory.get(name);
+        if(shared != null){
+            return shared;
         }
         throw new CodeGeneratorException("Unknown variable: "+name);
 
