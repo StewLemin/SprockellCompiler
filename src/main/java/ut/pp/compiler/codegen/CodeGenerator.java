@@ -1,6 +1,9 @@
 package ut.pp.compiler.codegen;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
@@ -12,6 +15,8 @@ import ut.pp.ast.variable.VariableNode;
 
 public class CodeGenerator {
     private static final int DIVISION_BY_ZERO_ERROR = -99999999;
+
+    private final Map<String, Integer> enumVal = new HashMap<>();
 
     private final SprilProgram code;
     private final MemoryManager memory;
@@ -31,6 +36,7 @@ public class CodeGenerator {
     }
 
     private void generateProgram(ProgramNode program) {
+        findEnumVal(program.statements);
         for (StatementNode statement : program.statements) {
             generateStatement(statement);
         }
@@ -51,9 +57,10 @@ public class CodeGenerator {
             generateWhile(whileNode);
         } else if (statement instanceof BlockNode block) {
             generateBlock(block);
-        } else {
-            throw new CodeGeneratorException("Unsupported statement: "
-                                                     + statement.getClass().getSimpleName());
+        } else if (statement instanceof EnumNode){
+            // No spril code needed for enums
+        }else {
+            throw new CodeGeneratorException("Unsupported statement: " + statement.getClass().getSimpleName());
         }
     }
 
@@ -81,6 +88,7 @@ public class CodeGenerator {
     }
     
     //change name
+    //CHANGE NAME LIKE FOR REAL BECAUSE MIHAICA BOSS IS A RETARD THAT IS JUST PLAYIG MINECRAFT
     private void generateScalarStore(MemoryLocation location, ExprNode value) {
         generateExpr(value);
         code.emit(Spril.pop(Spril.REG_A));
@@ -258,6 +266,16 @@ public class CodeGenerator {
     }
 
     private void generateVariableRead(VariableNode var) {
+        if (enumVal.containsKey(var.name)) {
+            int number= enumVal.get(var.name);
+            code.emit(Spril.load(Spril.immValue(number), Spril.REG_A));
+            code.emit(Spril.push(Spril.REG_A));
+            return;
+        }
+
+
+
+
         MemoryLocation location = memory.search(var.name);
         if (location.isArray()) {
             throw new CodeGeneratorException("Array variable '" + var.name
@@ -267,6 +285,8 @@ public class CodeGenerator {
         code.emit(Spril.load(Spril.dirAddr(location.getFirstAdress()), Spril.REG_A));
         code.emit(Spril.push(Spril.REG_A));
     }
+
+
 
     private void generateArrayRead(ArrayNode array) {
         MemoryLocation location = memory.search(array.name);
@@ -433,6 +453,21 @@ public class CodeGenerator {
         code.emit(Spril.compute("Equal", Spril.REG_A, Spril.ZERO, Spril.REG_A));
         code.emit(Spril.push(Spril.REG_A));
     }
+
+    public void findEnumVal (List<StatementNode> statements){
+        for (StatementNode statement : statements){
+            if(statement instanceof EnumNode e){
+                for(int i=0; i<e.enumValues.size();i++){
+                    String name = e.enumValues.get(i);
+                    enumVal.put(name,i);
+
+
+                }
+            }
+            if(statement instanceof BlockNode b){ findEnumVal(b.statements);}
+        }
+    }
+
 
 }
 
