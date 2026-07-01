@@ -5,6 +5,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import ut.pp.compiler.checker.Checker;
+import ut.pp.compiler.codegen.CodeGenerator;
+import ut.pp.compiler.codegen.HaskellOutput;
 import ut.pp.compiler.parser.ASTBuilder;
 import ut.pp.compiler.parser.ParserRunner;
 import ut.pp.parser.MyLangLexer;
@@ -38,5 +40,10 @@ public class Main {
         ProgramNode root = ParserRunner.parse(input);
         Checker checker = new Checker();
         checker.check(root);
+        CodeGenerator generator = new CodeGenerator();
+        generator.generate(root);
+        HaskellOutput output = new HaskellOutput();
+        //output.writeToFile(generator.generate(root),"output")
+
     }
 }
