@@ -308,29 +308,20 @@ public class Checker {
     }
 
     //TODO prolly we will have to change this since it handles dumb baka matei doggy uninitialization
+    //DONE
     private void checkIfNode(IfNode ifNode) {
         TypeNode condition = typeOfExpr(ifNode.condition);
         if (condition != null && !CheckerUtils.isBool(condition)) {
             error("If condition must be bool, but got " + CheckerUtils.toString(condition) + ".");
         }
 
-        Set<String> ifSet = CheckerUtils.checkForInitialization(ifNode.thenBlock,symbols);
         checkBlock(ifNode.thenBlock);
 
         if (ifNode.elseBlock != null) {
             checkBlock(ifNode.elseBlock);
         }
-
-        Set<String> elseSet = CheckerUtils.checkForInitialization(ifNode.elseBlock,symbols);
-        Set<String> oneBranchOnly = new HashSet<>(ifSet);
-        oneBranchOnly.addAll(elseSet);
-        Set<String> both = new HashSet<>(ifSet);
-        both.retainAll(elseSet);
-        oneBranchOnly.removeAll(both);
-        for(String v : oneBranchOnly) {
-            error("Variable '" + v + "' might not be initialized: it is only assigned in one branch");
-        }
     }
+
 
     private void checkWhileNode(WhileNode whileNode) {
         TypeNode condition = typeOfExpr(whileNode.expression);

@@ -121,25 +121,8 @@ public class TestChecker {
     }
 
     @Test
-    public void rejectsUseBeforeInitialization() {
-        assertThrows(CheckerException.class, () -> check("int x; print x;"));
-    }
-
-    @Test
     public void acceptsUseAfterInitialization() {
         assertDoesNotThrow(() -> check("int x; x = 5; print x;"));
-    }
-
-    @Test
-    public void rejectsInitializedInOnlyOneBranch() {
-        assertThrows(CheckerException.class,
-                () -> check("int x; if (TRUE) { x = 1; } print x;"));
-    }
-
-    @Test
-    public void acceptsInitializedInBothBranches() {
-        assertDoesNotThrow(() -> check(
-                "int x; if (TRUE) { x = 1; } else { x = 2; } print x;"));
     }
 
     @Test

@@ -88,22 +88,4 @@ public final class CheckerUtils {
         return base;
     }
 
-    public static Set<String> checkForInitialization(BlockNode block,SymbolTable symbols){
-        Set<String> initVarSet = new HashSet<>();
-        if(block == null){
-            return initVarSet;
-        }
-        for(StatementNode statement : block.statements){
-            if(statement instanceof AssignmentNode assignment){
-                String varName = assignment.target.name;
-                Symbol sym = symbols.lookup(varName);
-                if (sym == null){
-                    continue;
-                }
-                initVarSet.add(varName);
-                }
-            }
-        return initVarSet;
-    }
-
 }
