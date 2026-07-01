@@ -66,11 +66,15 @@ public class SymbolTable {
         scopesList.remove(scopesList.size() - 1);
     }
 
-    public void declare(String name,TypeNode type, boolean initialized) {
+    public void declare(String name,TypeNode type, boolean initialized, boolean isLock) {
         if (!isDeclaredInCurrScope(name)){
-            Symbol variable = new Symbol(name,type,initialized);
+            Symbol variable = new Symbol(name,type,initialized,isLock);
             scopesList.get(scopesList.size() - 1).put(name,variable);
         }
+    }
+
+    public void declareLock(String name){
+        declare(name,null,true,true);
     }
 
     public boolean isDeclaredInCurrScope(String name) {
@@ -92,13 +96,4 @@ public class SymbolTable {
             s.initialize();
         }
     }
-
-    public void declareLock(String name){
-        if(!isDeclaredInCurrScope(name)) {
-            Symbol lock = new Symbol(name, null, true, true);
-
-        }
-    }
-
-
 }

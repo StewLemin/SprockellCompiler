@@ -151,5 +151,42 @@ public class TestChecker {
         assertThrows(CheckerException.class, () -> check("int[3] x; x = [[1,2],32];"));
     }
 
+    @Test
+    public void rejectsForkInsideConditionalInsideLoop(){
+        assertThrows(CheckerException.class,() -> check("bool x = TRUE; while(x){ if(x) { fork { x = FALSE;}}}"));
+    }
+
+    @Test
+    public void rejectsForkInsideLoop(){
+        assertThrows(CheckerException.class, () -> check("bool x = TRUE; int balance = 0; while(x){fork{balance = balance + 100;}}"));
+    }
+
+    @Test
+    public void acceptsNestedForks(){
+        assertDoesNotThrow(() -> check("fork{fork{int x = 21;}}"));
+    }
+
+    @Test
+    public void acceptsAcquiringDeclaredLock(){
+        assertDoesNotThrow(() -> check("lock baustela; acquire(baustela);"));
+    }
+
+    @Test
+    public void rejectsNestedForkInsideLoop(){
+        assertThrows(CheckerException.class, () -> check("fork{ while(TRUE){fork{int x = 1;}}}"));
+    }
+
+    @Test
+    public void rejectsOperationUndeclaredLock(){
+        assertThrows(CheckerException.class,() -> check("int x = 1; release(baustela);"));
+    }
+
+    @Test
+    public void rejectsLockOperationOnOtherType(){
+        assertThrows(CheckerException.class,() -> check("int x = 1; acquire(x);"));
+    }
+
+    @Test
+    public void rejectsRedeclaration(){}
 
 }

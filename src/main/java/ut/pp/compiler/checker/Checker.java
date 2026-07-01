@@ -9,7 +9,10 @@ import java.util.Set;
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
+import ut.pp.ast.concurrency.ForkNode;
+import ut.pp.ast.concurrency.JoinNode;
 import ut.pp.ast.concurrency.LockNode;
+import ut.pp.ast.concurrency.LockOpNode;
 import ut.pp.ast.expr.*;
 import ut.pp.ast.statement.*;
 import ut.pp.ast.type.TypeKind;
@@ -21,7 +24,7 @@ import ut.pp.ast.variable.VariableNode;
 
 public class Checker {
     private final List<String> errors = new ArrayList<>();
-
+    private boolean isInsideLoop = false;
     private final SymbolTable symbols = new SymbolTable();
     public void check(ProgramNode program) {
         errors.clear();
@@ -55,7 +58,14 @@ public class Checker {
             checkEnumDeclaration(enumDeclaration);
         } else if(statement instanceof LockNode lock){
             checkLockDecl(lock);
+        } else if(statement instanceof LockOpNode lockOp){
+            checkLockOp(lockOp);
+        } else if(statement instanceof ForkNode fork){
+            checkFork(fork);
+        } else if(statement instanceof JoinNode){
+            //nothing to check :P
         }
+
         else {
             //TODO: add personalized error for statement
         }
@@ -304,7 +314,7 @@ public class Checker {
             }
         }
 
-        symbols.declare(declaration.identifier, declaration.type, true);
+        symbols.declare(declaration.identifier, declaration.type, true, false);
     }
 
     //TODO prolly we will have to change this since it handles dumb baka matei doggy uninitialization
@@ -328,8 +338,10 @@ public class Checker {
         if (condition != null && !CheckerUtils.isBool(condition)) {
             error("While condition must be bool, but got " + CheckerUtils.toString(condition) + ".");
         }
-
+        boolean oldValue = isInsideLoop;
+        isInsideLoop = true;
         checkBlock(whileNode.block);
+        isInsideLoop = oldValue;
     }
 
     private void checkBlock(BlockNode block) {
@@ -347,7 +359,32 @@ public class Checker {
     }
 
    private void checkLockDecl(LockNode lock){
-        SymbolTable symbols = new SymbolTable();
+        if(symbols.isDeclaredInCurrScope(lock.identifier)){
+            error("Lock '" + lock.identifier + "' already defined in current scope");
+            return;
+        }
+
+        symbols.declareLock(lock.identifier);
+   }
+
+   private void checkLockOp(LockOpNode lockOp){
+        Symbol foundSym = symbols.lookup(lockOp.identifier);
+        if(foundSym == null){
+            error("Lock '" + lockOp.identifier + "' has not been declared");
+        }
+        else{
+            if(!foundSym.isLock()){
+                error("Cannot use '" + lockOp.operation + "' on type:" + foundSym.getType().kind);
+            }
+        }
+   }
+
+
+   private void checkFork(ForkNode fork){
+        if(isInsideLoop){
+            error("Forks cannot occur inside loops");
+        }
+       checkBlock(fork.body);
    }
 
 
