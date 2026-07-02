@@ -83,7 +83,7 @@ public class TestParser {
 
 
     @Test
-    public void andBindsTighterThanOr() {
+    public void andBindsTighterThanOr(){
         ProgramNode root = buildAst("b = TRUE && FALSE || TRUE;");
         AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
         DoubleExprNode or = (DoubleExprNode) stmt.value;
@@ -93,7 +93,7 @@ public class TestParser {
 
 
     @Test
-    public void eqBindsTighterThanAnd() {
+    public void eqBindsTighterThanAnd(){
         ProgramNode root = buildAst("b = 1 == 2 && TRUE;");
         AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
         DoubleExprNode and = (DoubleExprNode) stmt.value;
@@ -103,7 +103,7 @@ public class TestParser {
 
 
     @Test
-    public void compBindsTighterThanEq() {
+    public void compBindsTighterThanEq(){
         ProgramNode root = buildAst("b = 1 < 2 == TRUE;");
         AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
         DoubleExprNode eq = (DoubleExprNode) stmt.value;
@@ -130,7 +130,7 @@ public class TestParser {
     }
 
     @Test
-    public void boolUsedAsIfCondition() {
+    public void boolUsedAsIfCondition(){
         ProgramNode root = buildAst("if (TRUE && FALSE) { print 1; }");
         assertInstanceOf(IfNode.class, root.statements.get(0));
     }
@@ -141,17 +141,17 @@ public class TestParser {
     }
 
     @Test
-    public void rejectsBraceLessIfOrWhileBlock() {
+    public void rejectsBraceLessIfOrWhileBlock(){
         assertThrows(ParseException.class, () -> buildAst("if (x) print 1"));
     }
 
     @Test
-    public void rejectsMissingCondition() {
+    public void rejectsMissingCondition(){
         assertThrows(ParseException.class, () -> buildAst("if () { print 1; }"));
     }
 
     @Test
-    public void elseAttachesToSamBlockIf() {
+    public void elseAttachesToSamBlockIf(){
         ProgramNode root = buildAst("if (a) { if (b) { print 1; } else { print 2; } }");
         IfNode outer = (IfNode) root.statements.get(0);
         assertNull(outer.elseBlock);
@@ -160,21 +160,21 @@ public class TestParser {
     }
 
     @Test
-    public void emptyBlockParses() {
+    public void emptyBlockParses(){
         ProgramNode root = buildAst("while (TRUE) {}");
         WhileNode node = (WhileNode) root.statements.get(0);
         assertEquals(0, node.block.statements.size());
     }
 
     @Test
-    public void arrayLiteralParses() {
+    public void arrayLiteralParses(){
         ProgramNode root = buildAst("x = [1, 2, 3];");
         AssignmentNode stmt = (AssignmentNode) root.statements.get(0);
         assertInstanceOf(ArrayLiteralNode.class, stmt.value);
     }
 
     @Test
-    public void arrayIndexingParses() {
+    public void arrayIndexingParses(){
         ProgramNode root = buildAst("x = a[2];");
     }
 
@@ -185,26 +185,26 @@ public class TestParser {
     }
 
     @Test
-    public void forkParsesForkNode() {
+    public void forkParsesForkNode(){
         ProgramNode root = buildAst("fork { print 21; }");
         assertInstanceOf(ForkNode.class, root.statements.get(0));
     }
 
     @Test
-    public void forkParsesMultipleStatementsInBlock() {
+    public void forkParsesMultipleStatementsInBlock(){
         ProgramNode root = buildAst("fork { print 16; int x = 23; }");
         ForkNode fork = (ForkNode) root.statements.get(0);
         assertEquals(2, fork.body.statements.size());
     }
 
     @Test
-    public void joinParsesToJoinNode() {
+    public void joinParsesToJoinNode(){
         ProgramNode root = buildAst("join;");
         assertInstanceOf(JoinNode.class, root.statements.get(0));
     }
 
     @Test
-    public void multipleForksThenJoin() {
+    public void multipleForksThenJoin(){
         ProgramNode root = buildAst("fork { print 273; } fork { x = 2 * 999; } join;");
         assertInstanceOf(ForkNode.class, root.statements.get(0));
         assertInstanceOf(ForkNode.class, root.statements.get(1));
@@ -212,48 +212,48 @@ public class TestParser {
     }
 
     @Test
-    public void nestedForkNodesParse() {
+    public void nestedForkNodesParse(){
         ProgramNode root = buildAst("fork { fork { print 61; } }");
         ForkNode outer = (ForkNode) root.statements.get(0);
         assertInstanceOf(ForkNode.class, outer.body.statements.get(0));
     }
 
     @Test
-    public void lockDeclParsesToLockNode() {
+    public void lockDeclParsesToLockNode(){
         ProgramNode root = buildAst("lock bankLock;");
         assertInstanceOf(LockNode.class, root.statements.get(0));
     }
 
     @Test
-    public void acquireLockParsesToLockOpAQ() {
+    public void acquireLockParsesToLockOpAQ(){
         ProgramNode root = buildAst("acquire(auraLock);");
         LockOpNode op = (LockOpNode) root.statements.get(0);
         assertEquals(LockOp.ACQUIRE, op.operation);
     }
 
     @Test
-    public void releaseParsesToLockOpREL() {
+    public void releaseParsesToLockOpREL(){
         ProgramNode root = buildAst("release(auraLock);");
         LockOpNode op = (LockOpNode) root.statements.get(0);
         assertEquals(LockOp.RELEASE, op.operation);
     }
 
     @Test
-    public void sharedDeclarationHasSharedFlag() {
+    public void sharedDeclarationHasSharedFlag(){
         ProgramNode root = buildAst("shared int balance = 0;");
         DeclarationNode decl = (DeclarationNode) root.statements.get(0);
         assertTrue(decl.isShared);
     }
 
     @Test
-    public void nonSharedDeclarationNoSharedFlag() {
+    public void nonSharedDeclarationNoSharedFlag(){
         ProgramNode root = buildAst("int x = 0;");
         DeclarationNode decl = (DeclarationNode) root.statements.get(0);
         assertFalse(decl.isShared);
     }
 
     @Test
-    public void commentsAreIgnored() {
+    public void commentsAreIgnored(){
         ProgramNode root = buildAst("""
             int x = 1; 
             // this is a comment;
@@ -265,7 +265,7 @@ public class TestParser {
     }
 
     @Test
-    public void enumDeclarationParses() {
+    public void enumDeclarationParses(){
         ProgramNode root = buildAst("enum Color { RED, GREEN, BLUE };");
         EnumNode enumNode = (EnumNode) root.statements.get(0);
         assertEquals("Color", enumNode.name);
@@ -276,7 +276,7 @@ public class TestParser {
     }
 
     @Test
-    public void enumVariableDeclarationParsesAsEnumType() {
+    public void enumVariableDeclarationParsesAsEnumType(){
         ProgramNode root = buildAst("Color c = GREEN;");
         DeclarationNode decl = (DeclarationNode) root.statements.get(0);
         assertEquals(TypeKind.ENUM, decl.type.kind);
@@ -284,7 +284,7 @@ public class TestParser {
     }
 
     @Test
-    public void divisionParses() {
+    public void divisionParses(){
         ProgramNode root = buildAst("int x = 10 / 2;");
         DeclarationNode decl = (DeclarationNode) root.statements.get(0);
         DoubleExprNode div = (DoubleExprNode) decl.value;
@@ -292,7 +292,7 @@ public class TestParser {
     }
 
     @Test
-    public void notEqualsParses() {
+    public void notEqualsParses(){
         ProgramNode root = buildAst("bool b = 1 != 2;");
         DeclarationNode decl = (DeclarationNode) root.statements.get(0);
         DoubleExprNode neq = (DoubleExprNode) decl.value;
@@ -300,11 +300,8 @@ public class TestParser {
     }
 
     @Test
-    public void gteAndLteParse() {
-        ProgramNode root = buildAst("""
-            bool a = 1 <= 2;
-            bool b = 3 >= 2;
-            """);
+    public void gteAndLteParse(){
+        ProgramNode root = buildAst("bool a = 1 <= 2; bool b = 3 >= 2;");
         DeclarationNode first = (DeclarationNode) root.statements.get(0);
         DeclarationNode second = (DeclarationNode) root.statements.get(1);
         assertEquals("<=", ((DoubleExprNode) first.value).operator);
@@ -312,31 +309,39 @@ public class TestParser {
     }
 
     @Test
-    public void arrayElementAssignmentParses() {
+    public void orBooleanOpParses(){
+        ProgramNode root =  buildAst("bool f = TRUE || FALSE;");
+        DeclarationNode decl = (DeclarationNode) root.statements.get(0);
+        DoubleExprNode or = (DoubleExprNode) decl.value;
+        assertEquals("||",or.operator);
+    }
+
+    @Test
+    public void arrayElementAssignmentParses(){
         ProgramNode root = buildAst("a[1] = 7;");
         AssignmentNode assignment = (AssignmentNode) root.statements.get(0);
         assertInstanceOf(ArrayNode.class, assignment.target);
     }
 
     @Test
-    public void emptyArrayLiteralParses() {
+    public void emptyArrayLiteralParses(){
         ProgramNode root = buildAst("x = [];");
         AssignmentNode assignment = (AssignmentNode) root.statements.get(0);
         assertInstanceOf(ArrayLiteralNode.class, assignment.value);
     }
 
     @Test
-    public void rejectsBadEnumSyntax() {
+    public void rejectsBadEnumSyntax(){
         assertThrows(ParseException.class, () -> buildAst("enum Color { RED, };"));
     }
 
     @Test
-    public void rejectsBadLockSyntax() {
+    public void rejectsBadLockSyntax(){
         assertThrows(ParseException.class, () -> buildAst("acquire bankLock;"));
     }
 
     @Test
-    public void rejectsBadForkSyntax() {
+    public void rejectsBadForkSyntax(){
         assertThrows(ParseException.class, () -> buildAst("fork print 1;"));
     }
 
