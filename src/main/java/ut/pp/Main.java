@@ -23,27 +23,18 @@ public class Main {
         System.out.println("Hello, Programming Paradigms");
 
         String input = """
-                                            shared int x = 0;
+                                                         shared int x = 0;
+                                                                                                              lock l;
                 
-                                            fork {
-                                                x = x + 1;
-                                            }
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              join;
                 
-                                            fork {
-                                                x = x + 1;
-                                            }
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              join;
                 
-                                            fork {
-                                                x = x + 1;
-                                            }
-                
-                                            fork {
-                                                x = x + 1;
-                                            }
-                
-                                            join;
-                
-                                            print x;
+                                                                                                              print x;
                 """;
         //to run do
         //cd sprockell

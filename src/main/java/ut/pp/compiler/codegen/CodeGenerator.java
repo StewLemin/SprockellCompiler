@@ -1,9 +1,6 @@
 package ut.pp.compiler.codegen;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import java.util.concurrent.locks.Lock;
 import ut.pp.ast.ExprNode;
@@ -24,8 +21,8 @@ public class CodeGenerator {
     private final List<SprilProgram> programs = new ArrayList<>();
     private SprilProgram code;//old code
 
-    private final List<ThreadData> threads = new ArrayList<>();
-    private final List<ThreadData> unjoinedThreads = new ArrayList<>();
+    //list of 0 -> 1 -> 2 flags for each thread to check
+    private final Stack<List<Integer>> unjoinedThreadsPerScope = new Stack<>();
     private final MemoryManager memory;
 
     public CodeGenerator() {
@@ -33,6 +30,7 @@ public class CodeGenerator {
         SprilProgram main = new SprilProgram();
         programs.add(main);
         this.code = main;
+        unjoinedThreadsPerScope.push(new ArrayList<>());
     }
 
     public List<List<String>> generate(ProgramNode program) {
@@ -85,42 +83,52 @@ public class CodeGenerator {
         }
     }
 
-    private void generateWaitUntilFinished(int doneFlagAddress) {
+    private void generateWaitUntilFinished(int threadStateAddress) {
         int loopStart = code.size();
-
-        code.emit(Spril.readInstr(Spril.dirAddr(doneFlagAddress)));
+        //read state value
+        code.emit(Spril.readInstr(Spril.dirAddr(threadStateAddress)));
         code.emit(Spril.receive(Spril.REG_A));
 
-        int branchDone = code.emit(Spril.branch(Spril.REG_A, Spril.abs(-1)));
+        //check if state value == 2
+        code.emit(Spril.load(Spril.immValue(2),Spril.REG_B));
+        code.emit(Spril.compute("Equal",Spril.REG_A,Spril.REG_B,Spril.REG_B));
+
+        int branchDone = code.emit(Spril.branch(Spril.REG_B, Spril.abs(-1)));
 
         code.emit(Spril.jump(Spril.abs(loopStart)));
 
         int after = code.size();
-        code.patch(Spril.branch(Spril.REG_A, Spril.abs(after)), branchDone);
+        code.patch(Spril.branch(Spril.REG_B, Spril.abs(after)), branchDone);
     }
 
 
 
     private void generateJoin(JoinNode join) {
-        for (ThreadData thread : unjoinedThreads) {
-            generateWaitUntilFinished(thread.doneAddress);
+        List<Integer> unjoinedThreads = unjoinedThreadsPerScope.peek();
+        for (int threadState : unjoinedThreads) {
+            generateWaitUntilFinished(threadState);
         }
 
         unjoinedThreads.clear();
     }
 
-    private void generateThreadWaitForForkStart(int startFlagAddress){
+    private void generateThreadWaitForForkStart(int threadStateAddres){
         int waitInstruction = code.size();
-
-        code.emit(Spril.readInstr(Spril.dirAddr(startFlagAddress)));
+        //read current state value
+        code.emit(Spril.readInstr(Spril.dirAddr(threadStateAddres)));
         code.emit(Spril.receive(Spril.REG_A));
 
-        int branchInstruction = code.emit(Spril.branch(Spril.REG_A,Spril.abs(-1)));
+        //check is current state value is 1 and store result in REB_B
+        code.emit(Spril.load(Spril.immValue(1),Spril.REG_B));
+        code.emit(Spril.compute("Equal",Spril.REG_A,Spril.REG_B,Spril.REG_B));
+
+        int branchInstruction = code.emit(Spril.branch(Spril.REG_B,Spril.abs(-1)));
+
 
         code.emit(Spril.jump(Spril.abs(waitInstruction)));
 
         int bodyStart = code.size();
-        code.patch(Spril.branch(Spril.REG_A,Spril.abs(bodyStart)), branchInstruction);
+        code.patch(Spril.branch(Spril.REG_B,Spril.abs(bodyStart)), branchInstruction);
 
 
     }
@@ -128,31 +136,32 @@ public class CodeGenerator {
 
 
     private void generateFork(ForkNode fork) {
-        int id = programs.size() - 1;
-        int startFlag = memory.allocateSharedAddress();
-        int doneFlag = memory.allocateSharedAddress();
+        int threadStateAddress = memory.allocateSharedAddress();
 
         SprilProgram parentThread = this.code;
         SprilProgram currentThread = new SprilProgram();
-        ThreadData thread = new ThreadData(id,startFlag,doneFlag,currentThread);
 
-        threads.add(thread);
-        unjoinedThreads.add(thread);
+
+        unjoinedThreadsPerScope.peek().add(threadStateAddress);
         programs.add(currentThread);
         this.code = currentThread;
 
-        generateThreadWaitForForkStart(startFlag);
+        unjoinedThreadsPerScope.push(new ArrayList<>());
+
+        generateThreadWaitForForkStart(threadStateAddress);
 
         generateBlock(fork.body);
 
-        code.emit(Spril.load(Spril.immValue(1),Spril.REG_A));
-        code.emit(Spril.writeInstr(Spril.REG_A,Spril.dirAddr(doneFlag)));
+        unjoinedThreadsPerScope.pop();
+
+        code.emit(Spril.load(Spril.immValue(2), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(threadStateAddress)));
         code.emit(Spril.endProg());
 
         this.code = parentThread;
 
         code.emit(Spril.load(Spril.immValue(1), Spril.REG_A));
-        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(startFlag)));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(threadStateAddress)));
     }
 
 
