@@ -155,8 +155,7 @@ public class CodeGenerator {
             }
         }
     }
-    
-    //change name
+
     private void generateStore(MemoryLocation location, ExprNode value) {
         generateExpr(value);
         code.emit(Spril.pop(Spril.REG_A));
@@ -168,7 +167,7 @@ public class CodeGenerator {
         }
 
     }
-    
+
     private void generateArrayValueInto(MemoryLocation location, ExprNode value) {
         if (!location.isArray()) {
             throw new CodeGeneratorException("Target '" + location.getName() + "' is not an array.");
@@ -234,7 +233,7 @@ public class CodeGenerator {
                 code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.addressOfElement(i))));
             }
         }
-        
+
     }
 
     private void generateAssignment(AssignmentNode assignment) {
