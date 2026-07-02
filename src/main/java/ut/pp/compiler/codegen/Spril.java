@@ -68,7 +68,7 @@ public class Spril {
     }
 
     public static String immValue(int n) {
-        return "(ImmValue " + n + ")";
+        return "(ImmValue " + "(" + n + ")" + ")";
     }
 
     public static String dirAddr(int addr) {
