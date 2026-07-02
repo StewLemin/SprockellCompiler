@@ -24,6 +24,11 @@ import ut.pp.ast.ProgramNode;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+//ADDED BY TERZA INITIALY TO BE CHANGED!!!!!!!!!!!!1
+import ut.pp.ast.statement.EnumNode;
+import ut.pp.ast.type.TypeKind;
+import ut.pp.ast.variable.ArrayNode;
+
 
 public class TestParser {
     private ProgramNode buildAst(String input){
@@ -249,6 +254,109 @@ public class TestParser {
         ProgramNode root = buildAst("int x = 0;");
         DeclarationNode decl = (DeclarationNode) root.statements.get(0);
         assertFalse(decl.isShared);
+    }
+
+    //hERE START THE NEW ADDED TESTS!!!!!!!!!!!!!!!!!!111
+
+    @Test
+    public void commentsAreIgnored() {
+        ProgramNode root = buildAst("""
+            int x = 1; // this is a comment
+            print x;
+            """);
+
+        assertEquals(2, root.statements.size());
+        assertInstanceOf(DeclarationNode.class, root.statements.get(0));
+    }
+
+    @Test
+    public void enumDeclarationParses() {
+        ProgramNode root = buildAst("enum Color { RED, GREEN, BLUE };");
+
+        EnumNode enumNode = (EnumNode) root.statements.get(0);
+
+        assertEquals("Color", enumNode.name);
+        assertEquals(3, enumNode.enumValues.size());
+        assertEquals("RED", enumNode.enumValues.get(0));
+        assertEquals("GREEN", enumNode.enumValues.get(1));
+        assertEquals("BLUE", enumNode.enumValues.get(2));
+    }
+
+    @Test
+    public void enumVariableDeclarationParsesAsEnumType() {
+        ProgramNode root = buildAst("Color c = GREEN;");
+
+        DeclarationNode decl = (DeclarationNode) root.statements.get(0);
+
+        assertEquals(TypeKind.ENUM, decl.type.kind);
+        assertEquals("Color", decl.type.typeName);
+    }
+
+    @Test
+    public void divisionParses() {
+        ProgramNode root = buildAst("int x = 10 / 2;");
+
+        DeclarationNode decl = (DeclarationNode) root.statements.get(0);
+        DoubleExprNode div = (DoubleExprNode) decl.value;
+
+        assertEquals("/", div.operator);
+    }
+
+    @Test
+    public void notEqualsParses() {
+        ProgramNode root = buildAst("bool b = 1 != 2;");
+
+        DeclarationNode decl = (DeclarationNode) root.statements.get(0);
+        DoubleExprNode neq = (DoubleExprNode) decl.value;
+
+        assertEquals("!=", neq.operator);
+    }
+
+    @Test
+    public void lessEqualAndGreaterEqualParse() {
+        ProgramNode root = buildAst("""
+            bool a = 1 <= 2;
+            bool b = 3 >= 2;
+            """);
+
+        DeclarationNode first = (DeclarationNode) root.statements.get(0);
+        DeclarationNode second = (DeclarationNode) root.statements.get(1);
+
+        assertEquals("<=", ((DoubleExprNode) first.value).operator);
+        assertEquals(">=", ((DoubleExprNode) second.value).operator);
+    }
+
+    @Test
+    public void arrayIndexedAssignmentParses() {
+        ProgramNode root = buildAst("a[1] = 7;");
+
+        AssignmentNode assignment = (AssignmentNode) root.statements.get(0);
+
+        assertInstanceOf(ArrayNode.class, assignment.target);
+    }
+
+    @Test
+    public void emptyArrayLiteralParses() {
+        ProgramNode root = buildAst("x = [];");
+
+        AssignmentNode assignment = (AssignmentNode) root.statements.get(0);
+
+        assertInstanceOf(ArrayLiteralNode.class, assignment.value);
+    }
+
+    @Test
+    public void rejectsBadEnumSyntax() {
+        assertThrows(ParseException.class, () -> buildAst("enum Color { RED, };"));
+    }
+
+    @Test
+    public void rejectsBadLockSyntax() {
+        assertThrows(ParseException.class, () -> buildAst("acquire bankLock;"));
+    }
+
+    @Test
+    public void rejectsBadForkSyntax() {
+        assertThrows(ParseException.class, () -> buildAst("fork print 1;"));
     }
 
 

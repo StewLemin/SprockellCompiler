@@ -196,4 +196,202 @@ public class TestChecker {
         assertThrows(CheckerException.class,() -> check("int terzic; lock terzic;"));
     }
 
+
+
+    //ADDED THE NEW ONES THEY HAVE TO BE PROVERENI!!!!!!!!11\\
+    @Test
+    public void rejectsUseBeforeInitialization() {
+        assertThrows(CheckerException.class, () -> check("int x; print x;"));
+    }
+
+    @Test
+    public void acceptsEnumDeclarationAndVariable() {
+        assertDoesNotThrow(() -> check("""
+            enum Color { RED, GREEN, BLUE };
+            Color c = GREEN;
+            print c;
+            """));
+    }
+
+    @Test
+    public void rejectsUnknownEnumType() {
+        assertThrows(CheckerException.class, () -> check("Color c = RED;"));
+    }
+
+    @Test
+    public void rejectsDuplicateEnumValueInSameEnum() {
+        assertThrows(CheckerException.class, () -> check("enum Color { RED, GREEN, RED };"));
+    }
+
+    @Test
+    public void rejectsDuplicateEnumValueAcrossEnums() {
+        assertThrows(CheckerException.class, () -> check("""
+            enum Color { RED, GREEN };
+            enum Direction { LEFT, RED };
+            """));
+    }
+
+    @Test
+    public void rejectsEnumTypeMismatchInAssignment() {
+        assertThrows(CheckerException.class, () -> check("""
+            enum Color { RED, GREEN };
+            enum Direction { LEFT, RIGHT };
+
+            Color c = RED;
+            c = LEFT;
+            """));
+    }
+
+    @Test
+    public void acceptsEnumEqualitySameType() {
+        assertDoesNotThrow(() -> check("""
+            enum Color { RED, GREEN };
+            bool same = RED == GREEN;
+            """));
+    }
+
+    @Test
+    public void rejectsEnumEqualityDifferentTypes() {
+        assertThrows(CheckerException.class, () -> check("""
+            enum Color { RED, GREEN };
+            enum Direction { LEFT, RIGHT };
+
+            bool same = RED == LEFT;
+            """));
+    }
+
+    @Test
+    public void acceptsEnumArrayLiteral() {
+        assertDoesNotThrow(() -> check("""
+            enum Color { RED, GREEN, BLUE };
+            Color[2] colors = [RED, GREEN];
+            """));
+    }
+
+    @Test
+    public void rejectsArrayLiteralWrongLength() {
+        assertThrows(CheckerException.class, () -> check("int[3] a = [1, 2];"));
+    }
+
+    @Test
+    public void acceptsArrayCopySameLength() {
+        assertDoesNotThrow(() -> check("""
+            int[2] a = [1, 2];
+            int[2] b = a;
+            """));
+    }
+
+    @Test
+    public void rejectsArrayCopyDifferentLength() {
+        assertThrows(CheckerException.class, () -> check("""
+            int[2] a = [1, 2];
+            int[3] b = a;
+            """));
+    }
+
+    @Test
+    public void acceptsArrayElementAssignmentCorrectType() {
+        assertDoesNotThrow(() -> check("""
+            int[3] a = [1, 2, 3];
+            a[0] = 99;
+            """));
+    }
+
+    @Test
+    public void rejectsArrayElementAssignmentWrongType() {
+        assertThrows(CheckerException.class, () -> check("""
+            int[3] a = [1, 2, 3];
+            a[0] = TRUE;
+            """));
+    }
+
+    @Test
+    public void rejectsCompileTimeArrayIndexOutOfBounds() {
+        assertThrows(CheckerException.class, () -> check("""
+            int[3] a = [1, 2, 3];
+            print a[3];
+            """));
+    }
+
+    @Test
+    public void rejectsEmptyArrayLiteral() {
+        assertThrows(CheckerException.class, () -> check("int[0] a = [];"));
+    }
+
+    @Test
+    public void rejectsCompileTimeDivisionByZero() {
+        assertThrows(CheckerException.class, () -> check("int x = 10 / 0;"));
+    }
+
+    @Test
+    public void acceptsRuntimeDivisionByVariable() {
+        assertDoesNotThrow(() -> check("""
+            int zero = 0;
+            int x = 10 / zero;
+            """));
+    }
+
+    @Test
+    public void acceptsSharedVariableWithForkAndLock() {
+        assertDoesNotThrow(() -> check("""
+            shared int balance = 0;
+            lock bank;
+
+            fork {
+                acquire(bank);
+                balance = balance + 1;
+                release(bank);
+            }
+
+            join;
+            print balance;
+            """));
+    }
+
+    @Test
+    public void rejectsLockUsedOutsideItsScope() {
+        assertThrows(CheckerException.class, () -> check("""
+            {
+                lock bank;
+            }
+
+            acquire(bank);
+            """));
+    }
+
+    @Test
+    public void acceptsMultipleForksThenJoin() {
+        assertDoesNotThrow(() -> check("""
+            shared int x = 0;
+            lock l;
+
+            fork {
+                acquire(l);
+                x = x + 1;
+                release(l);
+            }
+
+            fork {
+                acquire(l);
+                x = x + 1;
+                release(l);
+            }
+
+            fork {
+                acquire(l);
+                x = x + 1;
+                release(l);
+            }
+
+            fork {
+                acquire(l);
+                x = x + 1;
+                release(l);
+            }
+
+            join;
+            print x;
+            """));
+    }
+
 }
