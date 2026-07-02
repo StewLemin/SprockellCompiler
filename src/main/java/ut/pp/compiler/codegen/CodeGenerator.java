@@ -7,6 +7,7 @@ import java.util.Map;
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
+import ut.pp.ast.concurrency.*;
 import ut.pp.ast.expr.*;
 import ut.pp.ast.statement.*;
 import ut.pp.ast.type.TypeNode;
@@ -57,11 +58,34 @@ public class CodeGenerator {
             generateWhile(whileNode);
         } else if (statement instanceof BlockNode block) {
             generateBlock(block);
+        } else if (statement instanceof LockNode lock) {
+            generateLock(lock);
+        } else if (statement instanceof LockOpNode lockOp) {
+            generateLockOp(lockOp);
+        } else if (statement instanceof ForkNode fork) {
+            generateFork(fork);
+        } else if (statement instanceof JoinNode join) {
+            generateJoin(join);
+        } else {
+            throw new CodeGeneratorException("Unsupported statement: "
+                                                     + statement.getClass().getSimpleName());
         } else if (statement instanceof EnumNode){
             // No spril code needed for enums
         }else {
             throw new CodeGeneratorException("Unsupported statement: " + statement.getClass().getSimpleName());
         }
+    }
+
+    private void generateJoin(JoinNode join) {
+    }
+
+    private void generateFork(ForkNode fork) {
+    }
+
+    private void generateLockOp(LockOpNode lockOp) {
+    }
+
+    private void generateLock(LockNode lock) {
     }
 
     private void generateDeclaration(DeclarationNode declaration) {
@@ -83,16 +107,15 @@ public class CodeGenerator {
         code.emit(Spril.load(Spril.immValue(0), Spril.REG_A));
 
         for (int i = 0; i < location.getCellCount(); i++) {
-            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.adressOfElement(i))));
+            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.addressOfElement(i))));
         }
     }
     
     //change name
-    //CHANGE NAME LIKE FOR REAL BECAUSE MIHAICA BOSS IS A RETARD THAT IS JUST PLAYIG MINECRAFT
     private void generateScalarStore(MemoryLocation location, ExprNode value) {
         generateExpr(value);
         code.emit(Spril.pop(Spril.REG_A));
-        code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.getFirstAdress())));
+        code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.getFirstAddress())));
     }
     
     private void generateArrayValueInto(MemoryLocation location, ExprNode value) {
@@ -124,8 +147,8 @@ public class CodeGenerator {
         }
 
         for (int i = 0; i < target.getCellCount(); i++) {
-            code.emit(Spril.load(Spril.dirAddr(source.adressOfElement(i)), Spril.REG_A));
-            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(target.adressOfElement(i))));
+            code.emit(Spril.load(Spril.dirAddr(source.addressOfElement(i)), Spril.REG_A));
+            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(target.addressOfElement(i))));
         }
     }
 
@@ -140,7 +163,7 @@ public class CodeGenerator {
         for (int i = 0; i < arrayLiteral.elements.size(); i++) {
             generateExpr(arrayLiteral.elements.get(i));
             code.emit(Spril.pop(Spril.REG_A));
-            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.adressOfElement(i))));
+            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.addressOfElement(i))));
         }
         
     }
@@ -165,7 +188,7 @@ public class CodeGenerator {
         //calculate the address z§first
         generateExpr(array.index);
         code.emit(Spril.pop(Spril.REG_A));
-        code.emit(Spril.load(Spril.immValue(location.getFirstAdress()), Spril.REG_B));
+        code.emit(Spril.load(Spril.immValue(location.getFirstAddress()), Spril.REG_B));
         //regB will contain the memory address we want to write into
         code.emit(Spril.compute("Add", Spril.REG_B, Spril.REG_A, Spril.REG_B));
         code.emit(Spril.push(Spril.REG_B));
@@ -282,11 +305,9 @@ public class CodeGenerator {
                                                      + "' cannot be used as a scalar expression.");
         }
 
-        code.emit(Spril.load(Spril.dirAddr(location.getFirstAdress()), Spril.REG_A));
+        code.emit(Spril.load(Spril.dirAddr(location.getFirstAddress()), Spril.REG_A));
         code.emit(Spril.push(Spril.REG_A));
     }
-
-
 
     private void generateArrayRead(ArrayNode array) {
         MemoryLocation location = memory.search(array.name);
@@ -296,7 +317,7 @@ public class CodeGenerator {
 
         generateExpr(array.index);
         code.emit(Spril.pop(Spril.REG_A));
-        code.emit(Spril.load(Spril.immValue(location.getFirstAdress()), Spril.REG_B));
+        code.emit(Spril.load(Spril.immValue(location.getFirstAddress()), Spril.REG_B));
         code.emit(Spril.compute("Add", Spril.REG_B, Spril.REG_A, Spril.REG_B));
         code.emit(Spril.load(Spril.indAddr(Spril.REG_B), Spril.REG_A));
         code.emit(Spril.push(Spril.REG_A));

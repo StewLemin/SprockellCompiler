@@ -9,11 +9,11 @@ public class    MemoryLocation {
 
     private final String name;
     private final TypeNode type;
-    private final int firstAdress;
+    private final int firstAddress;
     private final int cellCount;
-    private boolean isShared;
+    private final boolean shared;
 
-    public MemoryLocation(String name, TypeNode type, int firstAdress,boolean isShared){
+    public MemoryLocation(String name, TypeNode type, int firstAddress,boolean isShared){
 
         if (name == null) {
             throw new CodeGeneratorException("Variable name cannot be null.");
@@ -24,9 +24,8 @@ public class    MemoryLocation {
 
         this.name = name;
         this.type = type;
-        this.isShared = isShared;
-        this.firstAdress = firstAdress;
-
+        this.shared = isShared;
+        this.firstAddress = firstAddress;
 
         if(type.isArray()){
             if (type.arrayLength == null || type.arrayLength <= 0) {
@@ -37,7 +36,6 @@ public class    MemoryLocation {
             this.cellCount = 1;
         }
     }
-
 
     public String getName() {
         return name;
@@ -51,23 +49,24 @@ public class    MemoryLocation {
         return cellCount;
     }
 
-    public int getFirstAdress() {
-        return firstAdress;
+    public int getFirstAddress() {
+        return firstAddress;
     }
-
 
     public boolean isArray(){
         return type.isArray();
     }
 
+    public boolean isShared() {
+        return shared;
+    }
 
-
-    public int adressOfElement(int i){
+    public int addressOfElement(int i){
         if (!isArray()) {
             if (i != 0) {
                 throw new CodeGeneratorException("Variable '" + name + "' is not an array.");
             }
-            return firstAdress;
+            return firstAddress;
     }
 
         if (i < 0 || i >= cellCount) {
@@ -76,13 +75,11 @@ public class    MemoryLocation {
             );
         }
 
-        return firstAdress + i;
+        return firstAddress + i;
     }
 
     @Override
     public String toString() {
-        return name + " -> address " + firstAdress + ", size " + cellCount;
+        return name + " -> address " + firstAddress + ", size " + cellCount;
     }
-
-
 }
