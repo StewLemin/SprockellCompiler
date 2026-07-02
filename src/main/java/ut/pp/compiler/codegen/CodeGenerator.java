@@ -186,15 +186,13 @@ public class CodeGenerator {
         //test and set the lock
         code.emit(Spril.testAndSet(Spril.dirAddr(address)));
         code.emit(Spril.receive(Spril.REG_A));
-        //then if regA == 0, that means the lock was free and we can acquire it
-        code.emit(Spril.compute("Equal", Spril.REG_A, Spril.ZERO, Spril.REG_B));
-        //otherwise we just retry
         //temporary branch
-        int branch = code.emit(Spril.branch(Spril.REG_B, Spril.abs(-1)));
+        int branch = code.emit(Spril.branch(Spril.REG_A, Spril.abs(-1)));
+        //if regA == 0, we retry
         code.emit(Spril.jump(Spril.abs(loopStart)));
         //we patch to known address now
         int acquiredAddress = code.size();
-        code.patch(Spril.branch(Spril.REG_B, Spril.abs(acquiredAddress)), branch);
+        code.patch(Spril.branch(Spril.REG_A, Spril.abs(acquiredAddress)), branch);
     }
 
     private void generateRelease(String lock) {
