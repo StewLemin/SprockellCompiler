@@ -1,0 +1,19 @@
+int[7] years = [2020,2021,2024,1900,2000,2400,2100];
+int[7] expected = [29,28,29,28,29,29,28];
+int i = 0;
+
+while (i < 7) {
+    int year = years[i];
+    int days = 28;
+
+    bool divBy4 = (year / 4) * 4 == year;
+    bool divBy100 = (year / 100) * 100 == year;
+    bool divBy400 = (year / 400) * 400 == year;
+    if (divBy4 && (!divBy100 || divBy400)) {
+        days = 29;
+    }
+
+    print days;
+    print days == expected[i];
+    i = i + 1;
+}

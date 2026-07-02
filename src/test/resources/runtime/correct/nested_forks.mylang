@@ -1,0 +1,30 @@
+shared int total = 0;
+lock totalLock;
+
+fork {
+    acquire(totalLock);
+    total = total + 1;
+    release(totalLock);
+
+    fork {
+        acquire(totalLock);
+        total = total + 10;
+        release(totalLock);
+    }
+
+    fork {
+        acquire(totalLock);
+        total = total + 20;
+        release(totalLock);
+    }
+
+    join;
+
+    acquire(totalLock);
+    total = total + 100;
+    release(totalLock);
+}
+
+join;
+
+print total;

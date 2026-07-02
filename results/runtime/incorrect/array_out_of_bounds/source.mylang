@@ -1,0 +1,20 @@
+int[4] v = [1,2,7,12];
+int i = 0;
+
+while (i < 4) {
+    int n = v[i];
+    int d = 2;
+    bool prime = TRUE;
+
+    while (d * d <= n) {
+        int q = n / d;
+        if (q * d == n) {
+            prime = FALSE;
+        }
+
+        d = d + 1;
+    }
+
+    print prime;
+    i = i + 1;
+}

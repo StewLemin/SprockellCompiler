@@ -1,0 +1,4 @@
+int x = 67;
+int y = 0;
+
+print x / y;

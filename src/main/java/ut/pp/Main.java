@@ -23,18 +23,11 @@ public class Main {
         System.out.println("Hello, Programming Paradigms");
 
         String input = """
-                                                         shared int x = 0;
-                                                                                                              lock l;
+                int cnt = 0;
                 
-                                                                                                              fork { acquire(l); x = x + 1; release(l); }
-                                                                                                              fork { acquire(l); x = x + 1; release(l); }
-                                                                                                              join;
-                
-                                                                                                              fork { acquire(l); x = x + 1; release(l); }
-                                                                                                              fork { acquire(l); x = x + 1; release(l); }
-                                                                                                              join;
-                
-                                                                                                              print x;
+                                                                         while(TRUE){
+                                                                             cnt = cnt + 1;
+                                                                         }
                 """;
         //to run do
         //cd sprockell

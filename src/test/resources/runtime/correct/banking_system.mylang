@@ -1,0 +1,62 @@
+shared int balance = 1000;
+lock bankLock;
+
+fork {
+    acquire(bankLock);
+    balance = balance + 100;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance - 30;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance + 20;
+    release(bankLock);
+}
+
+fork {
+    acquire(bankLock);
+    balance = balance - 50;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance + 10;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance - 20;
+    release(bankLock);
+}
+
+fork {
+    acquire(bankLock);
+    balance = balance + 200;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance - 40;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance + 5;
+    release(bankLock);
+}
+
+fork {
+    acquire(bankLock);
+    balance = balance - 25;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance - 25;
+    release(bankLock);
+
+    acquire(bankLock);
+    balance = balance + 15;
+    release(bankLock);
+}
+
+join;
+
+print balance;

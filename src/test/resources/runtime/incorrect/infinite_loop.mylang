@@ -1,0 +1,5 @@
+int cnt = 0;
+
+while(TRUE){
+    cnt = cnt + 1;
+}
