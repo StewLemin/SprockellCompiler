@@ -40,7 +40,7 @@ public class Main {
         //cd sprockell
         //stack build if never done before.
         //stack runghc ../output/Generated.hs to run the Generated.hs is built in Main()
-        ProgramNode root = ParserRunner.parse(input);
+        ProgramNode root = ParserRunner.parseString(input);
         Checker checker = new Checker();
         checker.check(root);
 

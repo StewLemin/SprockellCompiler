@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestCodeGenerator {
 
     private ProgramNode giveAST(String i) {
-        ProgramNode root = ParserRunner.parse(i);
+        ProgramNode root = ParserRunner.parseString(i);
         new Checker().check(root);
         return root;
     }

@@ -7,8 +7,12 @@ import ut.pp.ast.ProgramNode;
 import ut.pp.parser.MyLangLexer;
 import ut.pp.parser.MyLangParser;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class ParserRunner {
-    public static ProgramNode parse(String input){
+    public static ProgramNode parseString(String input){
         MyLangLexer myLangLexer = new MyLangLexer(CharStreams.fromString(input));
         myLangLexer.removeErrorListeners();
         myLangLexer.addErrorListener(ExceptionErrorListener.listener);
@@ -22,4 +26,12 @@ public class ParserRunner {
         ASTBuilder builder = new ASTBuilder();
         return (ProgramNode) builder.visit(tree);
     }
+
+    public static ProgramNode parseFile(Path path) throws IOException {
+        String input = Files.readString(path);
+        return parseString(input);
+    }
+
+
+
 }

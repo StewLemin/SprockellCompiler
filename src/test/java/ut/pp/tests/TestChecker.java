@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestChecker {
     private void check(String input) {
-        ProgramNode root = ParserRunner.parse(input);
+        ProgramNode root = ParserRunner.parseString(input);
         new Checker().check(root);
     }
     @Test

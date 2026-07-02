@@ -25,10 +25,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import ut.pp.ast.type.TypeKind;
 import ut.pp.ast.variable.ArrayNode;
 
+import java.nio.file.Path;
+
 
 public class TestParser {
     private ProgramNode buildAst(String input){
-        return ParserRunner.parse(input);
+        return ParserRunner.parseString(input);
     }
 
 
@@ -344,6 +346,42 @@ public class TestParser {
     public void rejectsBadForkSyntax(){
         assertThrows(ParseException.class, () -> buildAst("fork print 1;"));
     }
+
+    @Test
+    public void rejectsBadArrayDeclaration(){
+        assertThrows(ParseException.class,()->ParserRunner.parseFile( Path.of("testFiles/syntax-error/test_bad_array_declaration.mylang")));
+    }
+
+    @Test
+    public void rejectsBadEnumSyntaxFile(){
+        assertThrows(ParseException.class,()->ParserRunner.parseFile(Path.of("testFiles/syntax-error/test_bad_enum_syntax.mylang")));
+    }
+
+    @Test
+    public void rejectsForkWithoutBlock(){
+         assertThrows(ParseException.class,()->ParserRunner.parseFile(Path.of("testFiles/syntax-error/test_fork_without_block.mylang")));
+    }
+
+    @Test
+    public void rejectsIfWithoutBlock(){
+        assertThrows(ParseException.class,()->ParserRunner.parseFile(Path.of("testFiles/syntax-error/test_if_without_block.mylang")));
+    }
+
+    @Test
+    public void rejectsMissingExpressionSubExpr(){
+        assertThrows(ParseException.class,()->ParserRunner.parseFile(Path.of("testFiles/syntax-error/test_missing_expression_subexpr.mylang")));
+    }
+
+    @Test
+    public void rejectsMissingSemicolog(){
+        assertThrows(ParseException.class,()->ParserRunner.parseFile(Path.of("testFiles/syntax-error/test_missing_semicolon.mylang")));
+    }
+
+    @Test
+    public void rejectsWrongLockOperationSyntax(){
+        assertThrows(ParseException.class,()->ParserRunner.parseFile(Path.of("testFiles/syntax-error/test_wrong_lock_operation_syntax.mylang")));
+    }
+
 
 
 }
