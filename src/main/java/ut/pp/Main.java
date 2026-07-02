@@ -23,11 +23,18 @@ public class Main {
         System.out.println("Hello, Programming Paradigms");
 
         String input = """
-                int[3] arr = [1,2,3];
-                print arr[0];
-                arr[0] = 21;
-                print arr[0];
-                print arr[2];
+                                                         shared int x = 0;
+                                                                                                              lock l;
+                
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              join;
+                
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              fork { acquire(l); x = x + 1; release(l); }
+                                                                                                              join;
+                
+                                                                                                              print x;
                 """;
         //to run do
         //cd sprockell
@@ -38,15 +45,14 @@ public class Main {
         checker.check(root);
 
         CodeGenerator generator = new CodeGenerator();
-        List<String> instructions = generator.generate(root);
+        List<List<String>> programs = generator.generate(root);
 
-        System.out.println("Generated " + instructions.size() + " instructions:");
 
         HaskellOutput output = new HaskellOutput();
         Path outputPath = Path.of("output/Generated.hs");
         try {
             Files.createDirectories(outputPath.getParent());
-            output.writeToFile(instructions, outputPath);
+            output.writeToFile(programs, outputPath);
             System.out.println("Wrote to: " + outputPath);
         } catch (IOException e) {
             e.printStackTrace();

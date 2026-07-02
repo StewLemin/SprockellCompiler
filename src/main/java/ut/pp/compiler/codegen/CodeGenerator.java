@@ -1,8 +1,6 @@
 package ut.pp.compiler.codegen;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import java.util.concurrent.locks.Lock;
 import ut.pp.ast.ExprNode;
@@ -21,17 +19,28 @@ public class CodeGenerator {
     private final Map<String, Integer> enumVal = new HashMap<>();
     private final Map<String, Integer> lockAddresses = new HashMap<>();
 
-    private final SprilProgram code;
+    private final List<SprilProgram> programs = new ArrayList<>();
+    private SprilProgram code;//old code
+
+    //list of 0 -> 1 -> 2 flags for each thread to check
+    private final Stack<List<Integer>> unjoinedThreadsPerScope = new Stack<>();
     private final MemoryManager memory;
 
     public CodeGenerator() {
-        this.code = new SprilProgram();
         this.memory = new MemoryManager();
+        SprilProgram main = new SprilProgram();
+        programs.add(main);
+        this.code = main;
+        unjoinedThreadsPerScope.push(new ArrayList<>());
     }
 
-    public List<String> generate(ProgramNode program) {
+    public List<List<String>> generate(ProgramNode program) {
         generateProgram(program);
-        return code.getInstruction();
+        List<List<String>> result = new ArrayList<>();
+        for(SprilProgram p : programs){
+            result.add(p.getInstruction());
+        }
+        return result;
     }
 
     public String generateHaskell(ProgramNode program) {
@@ -75,11 +84,87 @@ public class CodeGenerator {
         }
     }
 
-    private void generateJoin(JoinNode join) {
+    private void generateWaitUntilFinished(int threadStateAddress) {
+        int loopStart = code.size();
+        //read state value
+        code.emit(Spril.readInstr(Spril.dirAddr(threadStateAddress)));
+        code.emit(Spril.receive(Spril.REG_A));
+
+        //check if state value == 2
+        code.emit(Spril.load(Spril.immValue(2),Spril.REG_B));
+        code.emit(Spril.compute("Equal",Spril.REG_A,Spril.REG_B,Spril.REG_B));
+
+        int branchDone = code.emit(Spril.branch(Spril.REG_B, Spril.abs(-1)));
+
+        code.emit(Spril.jump(Spril.abs(loopStart)));
+
+        int after = code.size();
+        code.patch(Spril.branch(Spril.REG_B, Spril.abs(after)), branchDone);
     }
 
-    private void generateFork(ForkNode fork) {
+
+
+    private void generateJoin(JoinNode join) {
+        List<Integer> unjoinedThreads = unjoinedThreadsPerScope.peek();
+        for (int threadState : unjoinedThreads) {
+            generateWaitUntilFinished(threadState);
+        }
+
+        unjoinedThreads.clear();
     }
+
+    private void generateThreadWaitForForkStart(int threadStateAddres){
+        int waitInstruction = code.size();
+        //read current state value
+        code.emit(Spril.readInstr(Spril.dirAddr(threadStateAddres)));
+        code.emit(Spril.receive(Spril.REG_A));
+
+        //check is current state value is 1 and store result in REB_B
+        code.emit(Spril.load(Spril.immValue(1),Spril.REG_B));
+        code.emit(Spril.compute("Equal",Spril.REG_A,Spril.REG_B,Spril.REG_B));
+
+        int branchInstruction = code.emit(Spril.branch(Spril.REG_B,Spril.abs(-1)));
+
+
+        code.emit(Spril.jump(Spril.abs(waitInstruction)));
+
+        int bodyStart = code.size();
+        code.patch(Spril.branch(Spril.REG_B,Spril.abs(bodyStart)), branchInstruction);
+
+
+    }
+
+
+
+    private void generateFork(ForkNode fork) {
+        int threadStateAddress = memory.allocateSharedAddress();
+
+        SprilProgram parentThread = this.code;
+        SprilProgram currentThread = new SprilProgram();
+
+
+        unjoinedThreadsPerScope.peek().add(threadStateAddress);
+        programs.add(currentThread);
+        this.code = currentThread;
+
+        unjoinedThreadsPerScope.push(new ArrayList<>());
+
+        generateThreadWaitForForkStart(threadStateAddress);
+
+        generateBlock(fork.body);
+
+        unjoinedThreadsPerScope.pop();
+
+        code.emit(Spril.load(Spril.immValue(2), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(threadStateAddress)));
+        code.emit(Spril.endProg());
+
+        this.code = parentThread;
+
+        code.emit(Spril.load(Spril.immValue(1), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(threadStateAddress)));
+    }
+
 
     private void generateLock(LockNode lock) {
         int address = memory.allocateSharedAddress();
@@ -111,15 +196,13 @@ public class CodeGenerator {
         //test and set the lock
         code.emit(Spril.testAndSet(Spril.dirAddr(address)));
         code.emit(Spril.receive(Spril.REG_A));
-        //then if regA == 0, that means the lock was free and we can acquire it
-        code.emit(Spril.compute("Equal", Spril.REG_A, Spril.ZERO, Spril.REG_B));
-        //otherwise we just retry
         //temporary branch
-        int branch = code.emit(Spril.branch(Spril.REG_B, Spril.abs(-1)));
+        int branch = code.emit(Spril.branch(Spril.REG_A, Spril.abs(-1)));
+        //if regA == 0, we retry
         code.emit(Spril.jump(Spril.abs(loopStart)));
         //we patch to known address now
         int acquiredAddress = code.size();
-        code.patch(Spril.branch(Spril.REG_B, Spril.abs(acquiredAddress)), branch);
+        code.patch(Spril.branch(Spril.REG_A, Spril.abs(acquiredAddress)), branch);
     }
 
     private void generateRelease(String lock) {
