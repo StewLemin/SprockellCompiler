@@ -66,9 +66,6 @@ public class CodeGenerator {
             generateFork(fork);
         } else if (statement instanceof JoinNode join) {
             generateJoin(join);
-        } else {
-            throw new CodeGeneratorException("Unsupported statement: "
-                                                     + statement.getClass().getSimpleName());
         } else if (statement instanceof EnumNode){
             // No spril code needed for enums
         }else {
