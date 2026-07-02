@@ -6,7 +6,7 @@ import java.util.Stack;
 public class MemoryManager {
     private final Stack <Map <String,MemoryLocation>> scopes = new Stack<>();
     private final Map<String,MemoryLocation> sharedMemory = new HashMap<>();
-    private int nextFreeAdress = 0;
+    private int nextFreeAddress = 0;
     private int nextSharedAddress = 0;
 
     public void newScope(){
@@ -31,20 +31,23 @@ public class MemoryManager {
             nextSharedAddress += location.getCellCount();
             return location;
         }
-
         else{
             Map<String, MemoryLocation> scope = scopes.peek();
             if (scope == null) {
                 throw new CodeGeneratorException("No active memory scope.");
             }
-            MemoryLocation location = new MemoryLocation(name,type,nextFreeAdress,false);
+            MemoryLocation location = new MemoryLocation(name, type, nextFreeAddress, false);
             scope.put(name,location);
-            nextFreeAdress += location.getCellCount();
+            nextFreeAddress += location.getCellCount();
             return location;
         }
     }
 
-
+    public int allocateSharedAddress() {
+        int address = nextSharedAddress;
+        nextSharedAddress++;
+        return address;
+    }
 
     public MemoryLocation search (String name){
         for (int i=scopes.size()-1; i >= 0; i-- ){
@@ -63,14 +66,11 @@ public class MemoryManager {
     }
 
     public int getCellsUsed(){
-        return nextFreeAdress;
+        return nextFreeAddress;
     }
 
     public boolean isInCurrentScope(String name){
         Map<String,MemoryLocation> scope = scopes.peek();
         return scope.containsKey(name);
     }
-
-
-
 }
