@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.locks.Lock;
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
 import ut.pp.ast.StatementNode;
@@ -17,6 +18,7 @@ public class CodeGenerator {
     private static final int DIVISION_BY_ZERO_ERROR = -99999999;
 
     private final Map<String, Integer> enumVal = new HashMap<>();
+    private final Map<String, Integer> lockAddresses = new HashMap<>();
 
     private final SprilProgram code;
     private final MemoryManager memory;
@@ -78,10 +80,53 @@ public class CodeGenerator {
     private void generateFork(ForkNode fork) {
     }
 
-    private void generateLockOp(LockOpNode lockOp) {
+    private void generateLock(LockNode lock) {
+        int address = memory.allocateSharedAddress();
+        lockAddresses.put(lock.identifier, address);
+
+        //0 means lock is unlocked
+        code.emit(Spril.load(Spril.immValue(0), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(address)));
     }
 
-    private void generateLock(LockNode lock) {
+    private void generateLockOp(LockOpNode lockOp) {
+        if (!lockAddresses.containsKey(lockOp.identifier)) {
+            throw new CodeGeneratorException("Unknown lock: " + lockOp.identifier);
+        }
+
+        if (lockOp.operation == LockOp.ACQUIRE) {
+            generateAcquire(lockOp.identifier);
+        } else if (lockOp.operation == LockOp.RELEASE){
+            generateRelease(lockOp.identifier);
+        } else {
+            throw new CodeGeneratorException("Unknown lock operation: " + lockOp.operation);
+        }
+    }
+
+    private void generateAcquire(String lock) {
+        int address = lockAddresses.get(lock);
+
+        int loopStart = code.size();
+        //test and set the lock
+        code.emit(Spril.testAndSet(Spril.dirAddr(address)));
+        code.emit(Spril.receive(Spril.REG_A));
+        //then if regA == 0, that means the lock was free and we can acquire it
+        code.emit(Spril.compute("Equal", Spril.REG_A, Spril.ZERO, Spril.REG_B));
+        //otherwise we just retry
+        //temporary branch
+        int branch = code.emit(Spril.branch(Spril.REG_B, Spril.abs(-1)));
+        code.emit(Spril.jump(Spril.abs(loopStart)));
+        //we patch to known address now
+        int acquiredAddress = code.size();
+        code.patch(Spril.branch(Spril.REG_B, Spril.abs(acquiredAddress)), branch);
+    }
+
+    private void generateRelease(String lock) {
+        int address = lockAddresses.get(lock);
+
+        //as before 0 means that its unlocked
+        code.emit(Spril.load(Spril.immValue(0), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(address)));
     }
 
     private void generateDeclaration(DeclarationNode declaration) {
@@ -531,7 +576,5 @@ public class CodeGenerator {
             if(statement instanceof BlockNode b){ findEnumVal(b.statements);}
         }
     }
-
-
 }
 
