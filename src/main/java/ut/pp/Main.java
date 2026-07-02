@@ -23,12 +23,16 @@ public class Main {
         System.out.println("Hello, Programming Paradigms");
 
         String input = """
-                // first program
-                int x = 1;
-                x = x + 1;
-                print x; 
+                int[3] arr = [1,2,3];
+                print arr[0];
+                arr[0] = 21;
+                print arr[0];
+                print arr[2];
                 """;
-
+        //to run do
+        //cd sprockell
+        //stack build if never done before.
+        //stack runghc ../output/Generated.hs to run the Generated.hs is built in Main()
         ProgramNode root = ParserRunner.parse(input);
         Checker checker = new Checker();
         checker.check(root);
@@ -38,7 +42,7 @@ public class Main {
 
         System.out.println("Generated " + instructions.size() + " instructions:");
 
-        HaskellOutput outpugt = new HaskellOutput();
+        HaskellOutput output = new HaskellOutput();
         Path outputPath = Path.of("output/Generated.hs");
         try {
             Files.createDirectories(outputPath.getParent());

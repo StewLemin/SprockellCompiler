@@ -235,6 +235,15 @@ public class Checker {
             error("Array index of '" + array.name + "' must be int.");
             return null;
         }
+        IntNode intIndex = (IntNode) array.index;
+        TypeNode type = symbol.getType();
+        if(intIndex != null && type != null){
+            if (intIndex.value > (type.arrayLength - 1)|| intIndex.value < 0){
+                error("Array index out of bounds '" + intIndex.value + "'");
+                return null;
+            }
+
+        }
 
         return CheckerUtils.elementType(arrayType);
     }
