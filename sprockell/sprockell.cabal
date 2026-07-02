@@ -1,0 +1,44 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.39.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           sprockell
+version:        2026.0.0
+description:    Please see the README on GitHub at <https://github.com/bobismijnnaam/sprockell#readme>
+homepage:       https://github.com/bobismijnnaam/sprockell#readme
+bug-reports:    https://github.com/bobismijnnaam/sprockell/issues
+author:         Jan Kuper, Martijn Bastiaan, Arjan Boeijink, Leon Schoorl, Bob Rubbens
+maintainer:     bobrubbens@gmail.com
+copyright:      2026, University of Twente
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/bobismijnnaam/sprockell
+
+library
+  exposed-modules:
+      Sprockell
+      Sprockell.BasicFunctions
+      Sprockell.Debugger
+      Sprockell.HardwareTypes
+      Sprockell.Simulation
+      Sprockell.Sprockell
+      Sprockell.System
+  other-modules:
+      Paths_sprockell
+  hs-source-dirs:
+      src
+  build-depends:
+      array ==0.5.*
+    , base >=4.18 && <5
+    , containers >=0.5
+    , deepseq ==1.5.*
+    , network ==3.2.*
+  default-language: Haskell2010
