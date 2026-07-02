@@ -1,6 +1,5 @@
 package ut.pp.compiler.codegen;
 
-import java.beans.Statement;
 import java.util.List;
 import ut.pp.ast.ExprNode;
 import ut.pp.ast.ProgramNode;
@@ -8,7 +7,6 @@ import ut.pp.ast.StatementNode;
 import ut.pp.ast.concurrency.*;
 import ut.pp.ast.expr.*;
 import ut.pp.ast.statement.*;
-import ut.pp.ast.type.TypeNode;
 import ut.pp.ast.variable.ArrayNode;
 import ut.pp.ast.variable.VariableNode;
 
@@ -98,7 +96,7 @@ public class CodeGenerator {
         code.emit(Spril.load(Spril.immValue(0), Spril.REG_A));
 
         for (int i = 0; i < location.getCellCount(); i++) {
-            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.adressOfElement(i))));
+            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.addressOfElement(i))));
         }
     }
     
@@ -106,7 +104,7 @@ public class CodeGenerator {
     private void generateScalarStore(MemoryLocation location, ExprNode value) {
         generateExpr(value);
         code.emit(Spril.pop(Spril.REG_A));
-        code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.getFirstAdress())));
+        code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.getFirstAddress())));
     }
     
     private void generateArrayValueInto(MemoryLocation location, ExprNode value) {
@@ -138,8 +136,8 @@ public class CodeGenerator {
         }
 
         for (int i = 0; i < target.getCellCount(); i++) {
-            code.emit(Spril.load(Spril.dirAddr(source.adressOfElement(i)), Spril.REG_A));
-            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(target.adressOfElement(i))));
+            code.emit(Spril.load(Spril.dirAddr(source.addressOfElement(i)), Spril.REG_A));
+            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(target.addressOfElement(i))));
         }
     }
 
@@ -154,7 +152,7 @@ public class CodeGenerator {
         for (int i = 0; i < arrayLiteral.elements.size(); i++) {
             generateExpr(arrayLiteral.elements.get(i));
             code.emit(Spril.pop(Spril.REG_A));
-            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.adressOfElement(i))));
+            code.emit(Spril.store(Spril.REG_A, Spril.dirAddr(location.addressOfElement(i))));
         }
         
     }
@@ -179,7 +177,7 @@ public class CodeGenerator {
         //calculate the address z§first
         generateExpr(array.index);
         code.emit(Spril.pop(Spril.REG_A));
-        code.emit(Spril.load(Spril.immValue(location.getFirstAdress()), Spril.REG_B));
+        code.emit(Spril.load(Spril.immValue(location.getFirstAddress()), Spril.REG_B));
         //regB will contain the memory address we want to write into
         code.emit(Spril.compute("Add", Spril.REG_B, Spril.REG_A, Spril.REG_B));
         code.emit(Spril.push(Spril.REG_B));
@@ -206,24 +204,7 @@ public class CodeGenerator {
     }
 
     private void generateIf(IfNode ifNode) {
-        generateExpr(ifNode.condition);
-        code.emit(Spril.pop(Spril.REG_A));
 
-        //temporary address for the then block using Abs -1
-        int branchToThenIndex = code.emit(Spril.branch(Spril.REG_A, Spril.abs(-1)));
-        if (ifNode.elseBlock != null) {
-            generateBlock(ifNode.elseBlock);
-        }
-
-        int jumpToEndIndex = code.emit(Spril.jump(Spril.abs(-1)));
-        int thenStart = code.size();
-        //we patch the previous branch so we can jump
-        code.patch(Spril.branch(Spril.REG_A, Spril.abs(thenStart)), branchToThenIndex);
-        generateBlock(ifNode.thenBlock);
-
-        //create instruction to jump into
-        int end = code.size();
-        code.patch(Spril.jump(Spril.abs(end)), jumpToEndIndex);
     }
 
     private void generateWhile(WhileNode whileNode) {
@@ -286,7 +267,7 @@ public class CodeGenerator {
                                                      + "' cannot be used as a scalar expression.");
         }
 
-        code.emit(Spril.load(Spril.dirAddr(location.getFirstAdress()), Spril.REG_A));
+        code.emit(Spril.load(Spril.dirAddr(location.getFirstAddress()), Spril.REG_A));
         code.emit(Spril.push(Spril.REG_A));
     }
 
@@ -298,7 +279,7 @@ public class CodeGenerator {
 
         generateExpr(array.index);
         code.emit(Spril.pop(Spril.REG_A));
-        code.emit(Spril.load(Spril.immValue(location.getFirstAdress()), Spril.REG_B));
+        code.emit(Spril.load(Spril.immValue(location.getFirstAddress()), Spril.REG_B));
         code.emit(Spril.compute("Add", Spril.REG_B, Spril.REG_A, Spril.REG_B));
         code.emit(Spril.load(Spril.indAddr(Spril.REG_B), Spril.REG_A));
         code.emit(Spril.push(Spril.REG_A));
