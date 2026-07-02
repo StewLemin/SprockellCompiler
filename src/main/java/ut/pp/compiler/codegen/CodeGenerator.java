@@ -16,6 +16,7 @@ import ut.pp.ast.variable.VariableNode;
 
 public class CodeGenerator {
     private static final int DIVISION_BY_ZERO_ERROR = -99999999;
+    private static final int ARRAY_OUT_OF_BOUNDS_ERROR = -88888888;
 
     private final Map<String, Integer> enumVal = new HashMap<>();
     private final Map<String, Integer> lockAddresses = new HashMap<>();
@@ -253,12 +254,40 @@ public class CodeGenerator {
             throw new CodeGeneratorException("Variable '" + array.name + "' is not an array.");
         }
 
-        //calculate the address z§first
         generateExpr(array.index);
         code.emit(Spril.pop(Spril.REG_A));
+
+        // Check index < 0
+        code.emit(Spril.compute("Lt", Spril.REG_A, Spril.ZERO, Spril.REG_C));
+        int tooSmall = code.emit(Spril.branch(Spril.REG_C, Spril.abs(-1)));
+
+        // Check index >= array length
+        code.emit(Spril.load(Spril.immValue(location.getCellCount()), Spril.REG_D));
+        code.emit(Spril.compute("GtE", Spril.REG_A, Spril.REG_D, Spril.REG_C));
+        int tooBig = code.emit(Spril.branch(Spril.REG_C, Spril.abs(-1)));
+
+        // If index is okay, skip error block
+        int jumpAfterError = code.emit(Spril.jump(Spril.abs(-1)));
+
+        // Error block
+        int errorStart = code.size();
+        code.patch(Spril.branch(Spril.REG_C, Spril.abs(errorStart)), tooSmall);
+        code.patch(Spril.branch(Spril.REG_C, Spril.abs(errorStart)), tooBig);
+
+        code.emit(Spril.load(Spril.immValue(ARRAY_OUT_OF_BOUNDS_ERROR), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.NUMBER_IO));
+        code.emit(Spril.endProg());
+
+        // Normal code continues here
+        int afterError = code.size();
+        code.patch(Spril.jump(Spril.abs(afterError)), jumpAfterError);
+
         code.emit(Spril.load(Spril.immValue(location.getFirstAddress()), Spril.REG_B));
         //regB will contain the memory address we want to write into
         code.emit(Spril.compute("Add", Spril.REG_B, Spril.REG_A, Spril.REG_B));
+
+
+
         code.emit(Spril.push(Spril.REG_B));
         generateExpr(value);
         code.emit(Spril.pop(Spril.REG_A)); //value
@@ -397,8 +426,37 @@ public class CodeGenerator {
 
         generateExpr(array.index);
         code.emit(Spril.pop(Spril.REG_A));
+
+        // Check index < 0
+        code.emit(Spril.compute("Lt", Spril.REG_A, Spril.ZERO, Spril.REG_C));
+        int tooSmall = code.emit(Spril.branch(Spril.REG_C, Spril.abs(-1)));
+
+        // Check index >= array length
+        code.emit(Spril.load(Spril.immValue(location.getCellCount()), Spril.REG_D));
+        code.emit(Spril.compute("GtE", Spril.REG_A, Spril.REG_D, Spril.REG_C));
+        int tooBig = code.emit(Spril.branch(Spril.REG_C, Spril.abs(-1)));
+
+        // If index is okay, skip error block
+        int jumpAfterError = code.emit(Spril.jump(Spril.abs(-1)));
+
+        // Error block
+        int errorStart = code.size();
+        code.patch(Spril.branch(Spril.REG_C, Spril.abs(errorStart)), tooSmall);
+        code.patch(Spril.branch(Spril.REG_C, Spril.abs(errorStart)), tooBig);
+
+        code.emit(Spril.load(Spril.immValue(ARRAY_OUT_OF_BOUNDS_ERROR), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.NUMBER_IO));
+        code.emit(Spril.endProg());
+
+        // Normal code continues here
+        int afterError = code.size();
+        code.patch(Spril.jump(Spril.abs(afterError)), jumpAfterError);
+
         code.emit(Spril.load(Spril.immValue(location.getFirstAddress()), Spril.REG_B));
         code.emit(Spril.compute("Add", Spril.REG_B, Spril.REG_A, Spril.REG_B));
+
+
+
 
         if (location.isShared()) {
             code.emit(Spril.readInstr(Spril.indAddr(Spril.REG_B)));

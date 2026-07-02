@@ -55,7 +55,7 @@ public class Checker {
         } else if(statement instanceof PrintNode print) {
             checkPrint(print);
         } else if(statement instanceof EnumNode enumDeclaration) {
-            checkEnumDeclaration(enumDeclaration);
+            checkEnum(enumDeclaration);
         } else if(statement instanceof LockNode lock){
             checkLockDecl(lock);
         } else if(statement instanceof LockOpNode lockOp){
@@ -235,14 +235,12 @@ public class Checker {
             error("Array index of '" + array.name + "' must be int.");
             return null;
         }
-        IntNode intIndex = (IntNode) array.index;
-        TypeNode type = symbol.getType();
-        if(intIndex != null && type != null){
-            if (intIndex.value > (type.arrayLength - 1)|| intIndex.value < 0){
-                error("Array index out of bounds '" + intIndex.value + "'");
-                return null;
-            }
 
+        if (array.index instanceof IntNode i) {
+                if (i.value >= arrayType.arrayLength || i.value < 0) {
+                    error("Array index out of bounds '" + i.value + "'");
+                    return null;
+                }
         }
 
         return CheckerUtils.elementType(arrayType);
@@ -398,9 +396,9 @@ public class Checker {
 
 
 
-    private void checkEnumDeclaration(EnumNode enumDecl) {
+    private void checkEnum(EnumNode enumD) {
         Set<String> viewd = new HashSet<>();
-        for (String value : enumDecl.enumValues) {
+        for (String value : enumD.enumValues) {
             if (viewd.contains(value)) {
                 error("PROBLEM Duplicate enum value'" + value + "'.");
                 return;
@@ -408,7 +406,9 @@ public class Checker {
             viewd.add(value);
         }
 
-        if (!symbols.declareEnum(enumDecl.name, enumDecl.enumValues)) {
+        if (symbols.declareEnum(enumD.name, enumD.enumValues)) {
+          return;
+        }else {
             error("PROBLEM Enum name or enum value is already declared.");
         }
     }
