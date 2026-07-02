@@ -1,5 +1,6 @@
 package ut.pp.compiler.codegen;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,17 +21,27 @@ public class CodeGenerator {
     private final Map<String, Integer> enumVal = new HashMap<>();
     private final Map<String, Integer> lockAddresses = new HashMap<>();
 
-    private final SprilProgram code;
+    private final List<SprilProgram> programs = new ArrayList<>();
+    private SprilProgram code;//old code
+
+    private final List<ThreadData> threads = new ArrayList<>();
+    private final List<ThreadData> unjoinedThreads = new ArrayList<>();
     private final MemoryManager memory;
 
     public CodeGenerator() {
-        this.code = new SprilProgram();
         this.memory = new MemoryManager();
+        SprilProgram main = new SprilProgram();
+        programs.add(main);
+        this.code = main;
     }
 
-    public List<String> generate(ProgramNode program) {
+    public List<List<String>> generate(ProgramNode program) {
         generateProgram(program);
-        return code.getInstruction();
+        List<List<String>> result = new ArrayList<>();
+        for(SprilProgram p : programs){
+            result.add(p.getInstruction());
+        }
+        return result;
     }
 
     public String generateHaskell(ProgramNode program) {
@@ -74,11 +85,76 @@ public class CodeGenerator {
         }
     }
 
-    private void generateJoin(JoinNode join) {
+    private void generateWaitUntilFinished(int doneFlagAddress) {
+        int loopStart = code.size();
+
+        code.emit(Spril.readInstr(Spril.dirAddr(doneFlagAddress)));
+        code.emit(Spril.receive(Spril.REG_A));
+
+        int branchDone = code.emit(Spril.branch(Spril.REG_A, Spril.abs(-1)));
+
+        code.emit(Spril.jump(Spril.abs(loopStart)));
+
+        int after = code.size();
+        code.patch(Spril.branch(Spril.REG_A, Spril.abs(after)), branchDone);
     }
 
-    private void generateFork(ForkNode fork) {
+
+
+    private void generateJoin(JoinNode join) {
+        for (ThreadData thread : unjoinedThreads) {
+            generateWaitUntilFinished(thread.doneAddress);
+        }
+
+        unjoinedThreads.clear();
     }
+
+    private void generateThreadWaitForForkStart(int startFlagAddress){
+        int waitInstruction = code.size();
+
+        code.emit(Spril.readInstr(Spril.dirAddr(startFlagAddress)));
+        code.emit(Spril.receive(Spril.REG_A));
+
+        int branchInstruction = code.emit(Spril.branch(Spril.REG_A,Spril.abs(-1)));
+
+        code.emit(Spril.jump(Spril.abs(waitInstruction)));
+
+        int bodyStart = code.size();
+        code.patch(Spril.branch(Spril.REG_A,Spril.abs(bodyStart)), branchInstruction);
+
+
+    }
+
+
+
+    private void generateFork(ForkNode fork) {
+        int id = programs.size() - 1;
+        int startFlag = memory.allocateSharedAddress();
+        int doneFlag = memory.allocateSharedAddress();
+
+        SprilProgram parentThread = this.code;
+        SprilProgram currentThread = new SprilProgram();
+        ThreadData thread = new ThreadData(id,startFlag,doneFlag,currentThread);
+
+        threads.add(thread);
+        unjoinedThreads.add(thread);
+        programs.add(currentThread);
+        this.code = currentThread;
+
+        generateThreadWaitForForkStart(startFlag);
+
+        generateBlock(fork.body);
+
+        code.emit(Spril.load(Spril.immValue(1),Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A,Spril.dirAddr(doneFlag)));
+        code.emit(Spril.endProg());
+
+        this.code = parentThread;
+
+        code.emit(Spril.load(Spril.immValue(1), Spril.REG_A));
+        code.emit(Spril.writeInstr(Spril.REG_A, Spril.dirAddr(startFlag)));
+    }
+
 
     private void generateLock(LockNode lock) {
         int address = memory.allocateSharedAddress();
