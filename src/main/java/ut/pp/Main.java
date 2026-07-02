@@ -13,37 +13,39 @@ import ut.pp.parser.MyLangLexer;
 import ut.pp.parser.MyLangParser;
 import ut.pp.ast.ProgramNode;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
 public class Main {
     public static void main(String[] args) {
         System.out.println("Hello, Programming Paradigms");
 
         String input = """
                 // first program
-                int x = 5;
-                int y = x + 3;
-                bool bigger = y > 5;
-                int[3] arr;
-                arr = [1,2,3];
-                arr[0] = 4;
-                enum name{RED,PULA,REGELE};
-                
-                if (bigger) {
-                    print y;
-                }
-
-                while (x > 0) {
-                    print x;
-                    x = x - 1;
-                }
+                int x = 1;
+                x = x + 1;
+                print x; 
                 """;
 
         ProgramNode root = ParserRunner.parse(input);
         Checker checker = new Checker();
         checker.check(root);
-        CodeGenerator generator = new CodeGenerator();
-        generator.generate(root);
-        HaskellOutput output = new HaskellOutput();
-        //output.writeToFile(generator.generate(root),"output")
 
+        CodeGenerator generator = new CodeGenerator();
+        List<String> instructions = generator.generate(root);
+
+        System.out.println("Generated " + instructions.size() + " instructions:");
+
+        HaskellOutput outpugt = new HaskellOutput();
+        Path outputPath = Path.of("output/Generated.hs");
+        try {
+            Files.createDirectories(outputPath.getParent());
+            output.writeToFile(instructions, outputPath);
+            System.out.println("Wrote to: " + outputPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
