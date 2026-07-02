@@ -217,9 +217,6 @@ public class Checker {
             return null;
         }
 
-        if (!symbol.isInitialized()) {
-            error("Array '" + array.name + "' is used before initialization.");
-        }
 
         TypeNode arrayType = symbol.getType();
         if (!arrayType.isArray()) {
@@ -250,9 +247,7 @@ public class Checker {
         Symbol symbol = symbols.lookup(var.name);
 
         if (symbol != null) {
-            if (!symbol.isInitialized()) {
-                error("Variable '" + var.name + "' is used before initialization.");
-            }
+
             return symbol.getType();
         }
 
@@ -310,7 +305,7 @@ public class Checker {
             return;
         }
 
-        boolean initialized = false;
+        boolean initialized = declaration.value != null;
         if (declaration.value != null) {
             TypeNode valueType = typeOfExpr(declaration.value);
 

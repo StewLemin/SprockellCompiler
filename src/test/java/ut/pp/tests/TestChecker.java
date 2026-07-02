@@ -200,8 +200,32 @@ public class TestChecker {
 
     //ADDED THE NEW ONES THEY HAVE TO BE PROVERENI!!!!!!!!11\\
     @Test
-    public void rejectsUseBeforeInitialization() {
-        assertThrows(CheckerException.class, () -> check("int x; print x;"));
+    public void acceptsDefaultInitializedInt() {
+        assertDoesNotThrow(() -> check("int x; print x;"));
+    }
+
+    @Test
+    public void acceptsDefaultInitializedBool() {
+        assertDoesNotThrow(() -> check("bool b; print b;"));
+    }
+
+    @Test
+    public void acceptsDefaultInitializedIntArray() {
+        assertDoesNotThrow(() -> check("""
+            int[3] a;
+            print a[0];
+            print a[1];
+            print a[2];
+            """));
+    }
+
+    @Test
+    public void acceptsDefaultInitializedBoolArray() {
+        assertDoesNotThrow(() -> check("""
+            bool[2] flags;
+            print flags[0];
+            print flags[1];
+            """));
     }
 
     @Test
