@@ -15,7 +15,7 @@ statement:
     |lockOp ';'#LockOpStatement
     |fork #ForkStatement
     |join ';' #JoinStatement
-    |enumDeclaration ';' # EnumDeclarationStatement
+    |enumType ';' # EnumStatement
     ;
 
 
@@ -88,7 +88,7 @@ print:
     'print' expr
     ;
 
-enumDeclaration:
+enumType:
     'enum' ID '{' ID (',' ID)* '}'
     ;
 

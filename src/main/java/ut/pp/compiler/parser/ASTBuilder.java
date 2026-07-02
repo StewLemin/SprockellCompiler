@@ -105,8 +105,8 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
     }
 
     @Override
-    public ASTNode visitEnumDeclarationStatement(MyLangParser.EnumDeclarationStatementContext ctx) {
-        return visit(ctx.enumDeclaration());
+    public ASTNode visitEnumStatement(MyLangParser.EnumStatementContext ctx) {
+        return visit(ctx.enumType());
     }
 
     @Override
@@ -123,7 +123,8 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
         return new DeclarationNode(type, name, isShared, initializer);
     }
 
-    public ASTNode visitEnumDeclaration(MyLangParser.EnumDeclarationContext ctx) {
+    @Override
+    public ASTNode visitEnumType(MyLangParser.EnumTypeContext ctx) {
         String enumName = ctx.ID(0).getText();
         List<String> values = new ArrayList<>();
 
@@ -188,7 +189,6 @@ public class ASTBuilder extends MyLangBaseVisitor<ASTNode> {
 
         return new TypeNode(kind);
     }
-
 
     @Override
     public ASTNode visitIfElse(MyLangParser.IfElseContext ctx) {
